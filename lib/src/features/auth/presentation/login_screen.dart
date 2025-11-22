@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../data/services/auth_service.dart';
+import 'providers/auth_provider.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -10,21 +12,10 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final AuthService _authService = AuthService();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   bool _showPassword = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _initializeAuth();
-  }
-
-  Future<void> _initializeAuth() async {
-    await _authService.initialize();
-  }
 
   @override
   void dispose() {
@@ -47,6 +38,8 @@ class _LoginScreenState extends State<LoginScreen> {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
+    print('Login attempt - Email: $email, IsFarmer: $isFarmer');
+
     if (email.isEmpty) {
       _showError('Please enter your email');
       return;
@@ -62,17 +55,23 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final success = await _authService.login(email, password);
+      final authProvider = context.read<AuthProvider>();
+      print('Attempting login with AuthProvider...');
+      final success = await authProvider.login(email, password);
+      print('Login result: $success');
 
       if (success) {
-        final user = _authService.getCurrentUser();
+        final user = authProvider.currentUser;
+        print('Current user after login: ${user?.name}, Role: ${user?.role}');
         if (user != null &&
             ((isFarmer && user.role == 'farmer') ||
                 (!isFarmer && user.role == 'official'))) {
           if (mounted) {
+            print('Navigating to dashboard...');
             context.go('/dashboard');
           }
         } else {
+          await authProvider.logout();
           _showError('Invalid role. Please login with the correct account type.');
         }
       } else {

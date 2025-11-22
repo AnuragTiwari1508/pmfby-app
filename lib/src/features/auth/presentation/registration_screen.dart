@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../domain/models/user_model.dart';
 import '../data/services/auth_service.dart';
+import 'providers/auth_provider.dart';
 
 class RegistrationScreen extends StatefulWidget {
   const RegistrationScreen({super.key});
@@ -11,7 +13,6 @@ class RegistrationScreen extends StatefulWidget {
 }
 
 class _RegistrationScreenState extends State<RegistrationScreen> {
-  final AuthService _authService = AuthService();
   late PageController _pageController;
   int _currentPage = 0;
   String _userRole = 'farmer'; // 'farmer' or 'official'
@@ -53,11 +54,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   void initState() {
     super.initState();
     _pageController = PageController();
-    _initializeAuth();
-  }
-
-  Future<void> _initializeAuth() async {
-    await _authService.initialize();
   }
 
   @override
@@ -225,7 +221,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             : null,
       );
 
-      final success = await _authService.register(user);
+      final success = await context.read<AuthProvider>().register(user);
 
       if (success) {
         if (mounted) {

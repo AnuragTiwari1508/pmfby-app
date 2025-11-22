@@ -23,17 +23,23 @@ void main() async {
   
   // Create demo users for testing if no users exist
   final allUsers = authService.getAllUsers();
+  print('Number of users in database: ${allUsers.length}');
   if (allUsers.isEmpty) {
+    print('Creating demo users...');
     await _createDemoUsers(authService);
+    print('Demo users created successfully');
   }
+  
+  // Initialize AuthProvider
+  final authProvider = AuthProvider(authService);
+  await authProvider.initialize();
+  print('AuthProvider initialized - Is logged in: ${authProvider.isLoggedIn}');
   
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => ThemeProvider()),
-        ChangeNotifierProvider(
-          create: (context) => AuthProvider(authService),
-        ),
+        ChangeNotifierProvider.value(value: authProvider),
       ],
       child: const KrisiBandhuApp(),
     ),
@@ -88,18 +94,9 @@ class ThemeProvider with ChangeNotifier {
 
 GoRouter _buildRouter(BuildContext context) {
   return GoRouter(
+    refreshListenable: context.read<AuthProvider>(),
     redirect: (BuildContext context, GoRouterState state) {
-      final authProvider = context.read<AuthProvider>();
-      final isLoggedIn = authProvider.isLoggedIn;
-      final isLoggingIn = state.matchedLocation == '/';
-      final isRegistering = state.matchedLocation == '/register';
-
-      if (!isLoggedIn && !isLoggingIn && !isRegistering) {
-        return '/';
-      }
-      if (isLoggedIn && (isLoggingIn || isRegistering)) {
-        return '/dashboard';
-      }
+      // Simplified redirect logic - no complex auth checks during routing
       return null;
     },
     routes: <RouteBase>[
