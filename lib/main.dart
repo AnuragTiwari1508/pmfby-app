@@ -86,7 +86,7 @@ class ThemeProvider with ChangeNotifier {
   }
 }
 
-final GoRouter _buildRouter(BuildContext context) {
+GoRouter _buildRouter(BuildContext context) {
   return GoRouter(
     redirect: (BuildContext context, GoRouterState state) {
       final authProvider = context.read<AuthProvider>();

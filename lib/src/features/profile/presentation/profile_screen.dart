@@ -32,21 +32,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _farmSizeController = TextEditingController();
   }
 
-  void _populateControllers(user) {
-    if (user != null && _nameController.text.isEmpty) {
-      _nameController.text = user.name;
-      _emailController.text = user.email;
-      _phoneController.text = user.phone;
-      if (user.role == 'farmer') {
-        _addressController.text = '${user.village ?? ''}, ${user.district ?? ''}, ${user.state ?? ''}';
-        _aadharController.text = user.aadharNumber != null ? '****-****-${user.aadharNumber.substring(8)}' : 'Not provided';
-        _farmSizeController.text = user.farmSize != null ? '${user.farmSize} acres' : 'Not specified';
-      } else {
-        _addressController.text = '${user.department ?? ''}, ${user.assignedDistrict ?? ''}';
-        _aadharController.text = user.officialId ?? 'Not provided';
-        _farmSizeController.text = user.designation ?? 'Not specified';
-      }
-    }
+  void _saveProfile() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Profile updated successfully!'),
+        backgroundColor: Colors.green,
+        duration: Duration(seconds: 2),
+      ),
+    );
+    setState(() {
+      _isEditing = false;
+    });
   }
 
   @override

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../domain/models/user_model.dart';
-import '../../data/services/auth_service.dart';
+import '../domain/models/user_model.dart';
+import '../data/services/auth_service.dart';
 
 class RegistrationScreen extends StatefulWidget {
   const RegistrationScreen({super.key});
