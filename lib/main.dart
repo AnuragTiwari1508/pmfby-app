@@ -7,6 +7,7 @@ import 'src/features/auth/presentation/login_screen.dart';
 import 'src/features/dashboard/presentation/dashboard_screen.dart';
 import 'src/features/camera/presentation/camera_screen.dart';
 import 'src/features/camera/presentation/image_preview_screen.dart';
+import 'src/features/profile/presentation/profile_screen.dart';
 
 void main() {
   runApp(
@@ -58,6 +59,12 @@ final GoRouter _router = GoRouter(
           },
         ),
       ],
+    ),
+    GoRoute(
+      path: '/profile',
+      builder: (BuildContext context, GoRouterState state) {
+        return const ProfileScreen();
+      },
     ),
   ],
 );
@@ -140,7 +147,7 @@ class KrisiBandhuApp extends StatelessWidget {
       builder: (context, themeProvider, child) {
         return MaterialApp.router(
           routerConfig: _router,
-          title: 'KrisiBandhu',
+          title: 'Krashi Bandhu',
           theme: lightTheme,
           darkTheme: darkTheme,
           themeMode: themeProvider.themeMode,

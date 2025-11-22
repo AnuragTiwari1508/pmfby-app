@@ -84,7 +84,12 @@ class DashboardCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       child: InkWell(
-        onTap: () {},
+        onTap: () {
+          if (title == 'My Profile') {
+            context.push('/profile');
+          }
+          // Add navigation for other cards as needed
+        },
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
