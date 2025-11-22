@@ -20,7 +20,7 @@ class LoginScreen extends StatelessWidget {
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
                   child: Text(
-                    'KrisiBandhu',
+                    'Krashi Bandhu',
                     style: Theme.of(context).textTheme.displayLarge?.copyWith(
                           color: Theme.of(context).colorScheme.primary,
                           fontSize: screenWidth * 0.15,
