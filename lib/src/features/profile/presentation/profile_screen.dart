@@ -73,19 +73,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  void _saveProfile() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Profile updated successfully!'),
-        backgroundColor: Colors.green,
-        duration: Duration(seconds: 2),
-      ),
-    );
-    setState(() {
-      _isEditing = false;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Consumer<AuthProvider>(
