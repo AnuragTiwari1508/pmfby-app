@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
-import '../data/services/auth_service.dart';
 import 'providers/auth_provider.dart';
 import '../../../services/firebase_auth_service.dart';
 
@@ -147,8 +146,6 @@ Future<void> _verifyOTP() async {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-
     return Scaffold(
 body: Container(
   decoration: BoxDecoration(
@@ -207,7 +204,7 @@ body: Container(
               textAlign: TextAlign.center,
               style: GoogleFonts.poppins(
                 fontSize: 14,
-                color: Colors.white.withOpacity(0.9),
+                color: Colors.white.withValues(alpha: 0.9), 0.9),
               ),
             ),
             const SizedBox(height: 50),
@@ -426,8 +423,6 @@ body: Container(
           ],
         ),
       ),
-    ),
-  ),
-);
+    );
   }
 }

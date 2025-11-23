@@ -60,7 +60,7 @@ void main() async {
         ChangeNotifierProvider.value(value: authProvider),
         ChangeNotifierProvider(create: (_) => FirebaseAuthService()),
       ],
-      child: const KrisiBandhuApp(),
+      child: const CropicApp(),
     ),
   );
 }

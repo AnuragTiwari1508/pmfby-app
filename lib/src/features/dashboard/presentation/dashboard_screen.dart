@@ -545,6 +545,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         onPressed: () => context.push('/camera'),
         label: const Text('Capture Crop Image'),
         icon: const Icon(Icons.camera_alt_rounded),
+      ),
     );
   }
 
@@ -636,26 +637,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: InkWell(
-        onTap: () {
-          if (title == 'My Profile') {
-            context.push('/profile');
-          } else if (title == 'My Complaints') {
-            context.push('/complaints');
-          }
-          // Add navigation for other cards as needed
-        },
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Icon(
-              icon,
-              size: 50.0,
-              color: Theme.of(context).colorScheme.primary,
                   // Profile Details
                   _buildProfileDetail('गांव (Village)', _userProfile!.village ?? 'N/A'),
                   _buildProfileDetail('जिला (District)', _userProfile!.district ?? 'N/A'),
@@ -671,7 +652,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ],
               ),
             ),
-    );
+          ],
+        ),
+      ),
   }
 
   Widget _buildProfileDetail(String label, String value) {
