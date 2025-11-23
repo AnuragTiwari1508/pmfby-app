@@ -147,24 +147,24 @@ Future<void> _verifyOTP() async {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-body: Container(
-  decoration: BoxDecoration(
-    gradient: LinearGradient(
-      begin: Alignment.topCenter,
-      end: Alignment.bottomCenter,
-      colors: [
-        Colors.green.shade700,
-        Colors.green.shade400,
-        Colors.lightGreen.shade200,
-      ],
-    ),
-  ),
-  child: SafeArea(
-    child: Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.green.shade700,
+              Colors.green.shade400,
+              Colors.lightGreen.shade200,
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                children: [
             // LOGO
             Container(
               padding: const EdgeInsets.all(20),

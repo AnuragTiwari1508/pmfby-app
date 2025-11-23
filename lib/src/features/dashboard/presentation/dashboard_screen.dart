@@ -21,7 +21,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    _loadUserProfile();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadUserProfile();
+    });
   }
 
   Future<void> _loadUserProfile() async {
@@ -653,9 +655,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ],
               ),
             ),
-          ],
-        ),
-      ),
     );
   }
 
