@@ -13,7 +13,7 @@ import 'package:krashi_bandhu/main.dart';
 void main() {
   testWidgets('Renders Login Screen', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const KrisiBandhuApp());
+    await tester.pumpWidget(const CropicApp());
 
     // Verify that the login screen is rendered.
     expect(find.text('Krashi Bandhu'), findsOneWidget);
