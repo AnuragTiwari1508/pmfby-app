@@ -41,7 +41,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           uid: authService.currentUser!.uid,
           name: 'Anshika',
           phoneNumber: authService.currentUser!.phoneNumber ?? '',
-          email: 'anshika@cropic.in',
+          email: 'anshika@krashibandhu.in',
           village: 'Jaitpur',
           district: 'Barabanki',
           state: 'Uttar Pradesh',
@@ -135,7 +135,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               backgroundColor: Colors.green.shade700,
               flexibleSpace: FlexibleSpaceBar(
                 title: Text(
-                  'CROPIC',
+                  'Krashi Bandhu',
                   style: GoogleFonts.poppins(
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
@@ -330,7 +330,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     'My Claims',
                     Icons.history,
                     Colors.orange,
-                    () => setState(() => _selectedIndex = 1),
+                    () => context.push('/claims'),
                   ),
                   _buildActionCard(
                     'बीमा योजनाएं',
@@ -452,7 +452,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         child: Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             gradient: LinearGradient(
@@ -468,29 +468,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: color.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, size: 32, color: color),
+                child: Icon(icon, size: 28, color: color),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               Text(
                 titleHindi,
                 textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
                 style: GoogleFonts.notoSans(
-                  fontSize: 13,
+                  fontSize: 12,
                   fontWeight: FontWeight.w600,
                   color: Colors.black87,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 2),
               Text(
                 titleEnglish,
                 textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: GoogleFonts.roboto(
-                  fontSize: 10,
+                  fontSize: 9,
                   color: Colors.grey.shade600,
                 ),
               ),
@@ -706,7 +710,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           children: [
             Text('हेल्पलाइन: 1800-XXX-XXXX'),
             const SizedBox(height: 8),
-            Text('Email: support@cropic.gov.in'),
+            Text('Email: support@krashibandhu.gov.in'),
             const SizedBox(height: 8),
             Text('समय: सोमवार-शुक्रवार, 9 AM - 6 PM'),
           ],

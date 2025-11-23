@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../auth/presentation/providers/auth_provider.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -13,384 +14,595 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   bool _isEditing = false;
 
-  // Sample user data
-  late TextEditingController _nameController;
-  late TextEditingController _emailController;
-  late TextEditingController _phoneController;
-  late TextEditingController _addressController;
-  late TextEditingController _aadharController;
-  late TextEditingController _farmSizeController;
-
-  @override
-  void initState() {
-    super.initState();
-    _nameController = TextEditingController();
-    _emailController = TextEditingController();
-    _phoneController = TextEditingController();
-    _addressController = TextEditingController();
-    _aadharController = TextEditingController();
-    _farmSizeController = TextEditingController();
-  }
-
-  void _saveProfile() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Profile updated successfully!'),
-        backgroundColor: Colors.green,
-        duration: Duration(seconds: 2),
-      ),
-    );
-    setState(() {
-      _isEditing = false;
-    });
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _emailController.dispose();
-    _phoneController.dispose();
-    _addressController.dispose();
-    _aadharController.dispose();
-    _farmSizeController.dispose();
-    super.dispose();
-  }
-
-  void _populateControllers(user) {
-    if (user != null) {
-      _nameController.text = user.name;
-      _emailController.text = user.email;
-      _phoneController.text = user.phone;
-      if (user.role == 'farmer') {
-        _addressController.text = '${user.village}, ${user.district}, ${user.state}';
-        _aadharController.text = user.aadharNumber != null ? '****-****-${user.aadharNumber.substring(8)}' : 'Not provided';
-        _farmSizeController.text = user.farmSize != null ? '${user.farmSize} acres' : 'Not specified';
-      } else {
-        _addressController.text = '${user.department}, ${user.assignedDistrict}';
-        _aadharController.text = user.officialId ?? 'Not provided';
-        _farmSizeController.text = user.designation ?? 'Not specified';
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Consumer<AuthProvider>(
       builder: (context, authProvider, child) {
         final user = authProvider.currentUser;
         
-        // Populate controllers when user data is available
-        if (user != null && _nameController.text.isEmpty) {
-          _populateControllers(user);
+        if (user == null) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Profile')),
+            body: const Center(child: Text('No user data available')),
+          );
         }
-        
+
         return Scaffold(
-      appBar: AppBar(
-        title: const Text('My Profile'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
-        actions: [
-          if (!_isEditing)
-            IconButton(
-              icon: const Icon(Icons.edit),
-              onPressed: () => setState(() => _isEditing = true),
-              tooltip: 'Edit Profile',
-            ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            // Profile Avatar
-            Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.primary,
-                  width: 3,
-                ),
-              ),
-              child: Center(
-                child: Text(
-                  _nameController.text.isNotEmpty
-                      ? _nameController.text.split(' ').map((e) => e[0]).join()
-                      : 'RK',
-                  style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontSize: 48,
+          backgroundColor: Colors.grey.shade50,
+          body: CustomScrollView(
+            slivers: [
+              // Profile Header with Gradient
+              SliverAppBar(
+                expandedHeight: 240,
+                floating: false,
+                pinned: true,
+                backgroundColor: Colors.green.shade700,
+                flexibleSpace: FlexibleSpaceBar(
+                  background: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.green.shade700,
+                          Colors.green.shade500,
+                        ],
                       ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 24.0),
-
-            // Personal Information Section
-            _buildSectionHeader('Personal Information'),
-            _buildProfileField(
-              label: 'Full Name',
-              controller: _nameController,
-              icon: Icons.person,
-              enabled: _isEditing,
-            ),
-            _buildProfileField(
-              label: 'Email Address',
-              controller: _emailController,
-              icon: Icons.email,
-              enabled: _isEditing,
-              keyboardType: TextInputType.emailAddress,
-            ),
-            _buildProfileField(
-              label: 'Phone Number',
-              controller: _phoneController,
-              icon: Icons.phone,
-              enabled: _isEditing,
-              keyboardType: TextInputType.phone,
-            ),
-            const SizedBox(height: 24.0),
-
-            // Address Information Section
-            _buildSectionHeader('Address Information'),
-            _buildProfileField(
-              label: 'Address',
-              controller: _addressController,
-              icon: Icons.location_on,
-              enabled: _isEditing,
-              maxLines: 2,
-            ),
-            const SizedBox(height: 24.0),
-
-            // Identification & Farm Section
-            _buildSectionHeader('Identification & Farm Details'),
-            _buildProfileField(
-              label: 'Aadhar Number',
-              controller: _aadharController,
-              icon: Icons.badge,
-              enabled: false,
-            ),
-            _buildProfileField(
-              label: 'Farm Size',
-              controller: _farmSizeController,
-              icon: Icons.agriculture,
-              enabled: _isEditing,
-            ),
-            const SizedBox(height: 32.0),
-
-            // Action Buttons
-            if (_isEditing)
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () {
-                        setState(() => _isEditing = false);
-                        // Reset to original values
-                        _nameController.text = 'Raj Kumar';
-                        _emailController.text = 'raj.kumar@example.com';
-                        _phoneController.text = '+91 98765 43210';
-                        _addressController.text =
-                            'Village Name, District, State - 123456';
-                        _farmSizeController.text = '2.5 acres';
-                      },
-                      child: const Text('Cancel'),
                     ),
-                  ),
-                  const SizedBox(width: 16.0),
-                  Expanded(
-                    child: FilledButton(
-                      onPressed: _saveProfile,
-                      child: const Text('Save Changes'),
-                    ),
-                  ),
-                ],
-              )
-            else
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: () => setState(() => _isEditing = true),
-                  icon: const Icon(Icons.edit),
-                  label: const Text('Edit Profile'),
-                ),
-              ),
-
-            const SizedBox(height: 16.0),
-
-            // Additional Options
-            if (!_isEditing) ...[
-              const Divider(height: 32.0),
-              _buildOptionTile(
-                icon: Icons.security,
-                title: 'Change Password',
-                subtitle: 'Update your security settings',
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Feature coming soon!')),
-                  );
-                },
-              ),
-              _buildOptionTile(
-                icon: Icons.notifications,
-                title: 'Notifications',
-                subtitle: 'Manage notification preferences',
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Feature coming soon!')),
-                  );
-                },
-              ),
-              _buildOptionTile(
-                icon: Icons.help,
-                title: 'Help & Support',
-                subtitle: 'Get help and contact support',
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Feature coming soon!')),
-                  );
-                },
-              ),
-              _buildOptionTile(
-                icon: Icons.logout,
-                title: 'Logout',
-                subtitle: 'Sign out from your account',
-                onTap: () {
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return AlertDialog(
-                        title: const Text('Logout'),
-                        content: const Text(
-                            'Are you sure you want to logout from your account?'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.of(context).pop(),
-                            child: const Text('Cancel'),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const SizedBox(height: 60),
+                        // Profile Avatar
+                        Container(
+                          width: 100,
+                          height: 100,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                blurRadius: 10,
+                                spreadRadius: 2,
+                              ),
+                            ],
                           ),
-                          TextButton(
-                            onPressed: () async {
-                              Navigator.of(context).pop();
-                              await context.read<AuthProvider>().logout();
-                              if (context.mounted) {
-                                context.go('/');
-                              }
+                          child: Center(
+                            child: Text(
+                              user.name.split(' ').map((e) => e.isNotEmpty ? e[0] : '').join().toUpperCase(),
+                              style: GoogleFonts.poppins(
+                                fontSize: 36,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green.shade700,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          user.name,
+                          style: GoogleFonts.poppins(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            user.role == 'farmer' ? '👨‍🌾 Farmer' : '👔 Official',
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              // Profile Content
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Contact Information Card
+                      _buildInfoCard(
+                        title: 'Contact Information',
+                        icon: Icons.contact_phone,
+                        children: [
+                          _buildInfoRow(Icons.phone, 'Phone', user.phone),
+                          _buildInfoRow(Icons.email, 'Email', user.email),
+                        ],
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Location/Department Card
+                      if (user.role == 'farmer') ...[
+                        _buildInfoCard(
+                          title: 'Location Details',
+                          icon: Icons.location_on,
+                          children: [
+                            _buildInfoRow(Icons.home, 'Village', user.village ?? 'Not specified'),
+                            _buildInfoRow(Icons.location_city, 'District', user.district ?? 'Not specified'),
+                            _buildInfoRow(Icons.map, 'State', user.state ?? 'Not specified'),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        _buildInfoCard(
+                          title: 'Farm Information',
+                          icon: Icons.agriculture,
+                          children: [
+                            _buildInfoRow(
+                              Icons.landscape,
+                              'Farm Size',
+                              user.farmSize != null ? '${user.farmSize} acres' : 'Not specified',
+                            ),
+                            _buildInfoRow(
+                              Icons.badge,
+                              'Aadhaar',
+                              user.aadharNumber != null && user.aadharNumber!.length >= 4
+                                  ? '****-****-${user.aadharNumber!.substring(user.aadharNumber!.length - 4)}'
+                                  : 'Not provided',
+                            ),
+                            if (user.cropTypes != null && user.cropTypes!.isNotEmpty)
+                              _buildChipRow(Icons.eco, 'Crops', user.cropTypes!),
+                          ],
+                        ),
+                      ] else ...[
+                        _buildInfoCard(
+                          title: 'Official Details',
+                          icon: Icons.work,
+                          children: [
+                            _buildInfoRow(Icons.badge, 'Official ID', user.officialId ?? 'Not assigned'),
+                            _buildInfoRow(Icons.business_center, 'Designation', user.designation ?? 'Not specified'),
+                            _buildInfoRow(Icons.business, 'Department', user.department ?? 'Not specified'),
+                            _buildInfoRow(Icons.location_city, 'Assigned District', user.assignedDistrict ?? 'Not assigned'),
+                          ],
+                        ),
+                      ],
+
+                      const SizedBox(height: 16),
+
+                      // Statistics Card (for farmers)
+                      if (user.role == 'farmer')
+                        _buildStatsCard(),
+
+                      const SizedBox(height: 16),
+
+                      // Settings Options
+                      _buildInfoCard(
+                        title: 'Settings & Support',
+                        icon: Icons.settings,
+                        children: [
+                          _buildActionTile(
+                            icon: Icons.edit,
+                            title: 'Edit Profile',
+                            subtitle: 'Update your information',
+                            onTap: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Edit feature coming soon!')),
+                              );
                             },
-                            child: const Text('Logout'),
+                          ),
+                          _buildActionTile(
+                            icon: Icons.lock,
+                            title: 'Change Password',
+                            subtitle: 'Update your security settings',
+                            onTap: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Password change coming soon!')),
+                              );
+                            },
+                          ),
+                          _buildActionTile(
+                            icon: Icons.notifications,
+                            title: 'Notifications',
+                            subtitle: 'Manage notification preferences',
+                            onTap: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Notification settings coming soon!')),
+                              );
+                            },
+                          ),
+                          _buildActionTile(
+                            icon: Icons.help_outline,
+                            title: 'Help & Support',
+                            subtitle: 'Get help and contact support',
+                            onTap: () {
+                              _showHelpDialog();
+                            },
+                          ),
+                          const Divider(height: 32),
+                          _buildActionTile(
+                            icon: Icons.logout,
+                            title: 'Logout',
+                            subtitle: 'Sign out from your account',
+                            isDestructive: true,
+                            onTap: () {
+                              _showLogoutDialog();
+                            },
                           ),
                         ],
-                      );
-                    },
-                  );
-                },
-                isDestructive: true,
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Version Info
+                      Center(
+                        child: Text(
+                          'Krashi Bandhu v1.0.0',
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Center(
+                        child: Text(
+                          'PMFBY - Pradhan Mantri Fasal Bima Yojana',
+                          style: GoogleFonts.poppins(
+                            fontSize: 10,
+                            color: Colors.grey.shade500,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                    ],
+                  ),
+                ),
               ),
             ],
-          ],
-        ),
-      ),
+          ),
         );
       },
     );
   }
 
-  Widget _buildSectionHeader(String title) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: 12.0),
-        child: Text(
-          title,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-        ),
+  Widget _buildInfoCard({
+    required String title,
+    required IconData icon,
+    required List<Widget> children,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 10,
+            spreadRadius: 2,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              children: [
+                Icon(icon, color: Colors.green.shade700, size: 24),
+                const SizedBox(width: 12),
+                Text(
+                  title,
+                  style: GoogleFonts.poppins(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: children,
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildProfileField({
-    required String label,
-    required TextEditingController controller,
-    required IconData icon,
-    bool enabled = true,
-    TextInputType keyboardType = TextInputType.text,
-    int maxLines = 1,
-  }) {
+  Widget _buildInfoRow(IconData icon, String label, String value) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
-      child: TextFormField(
-        controller: controller,
-        enabled: enabled,
-        keyboardType: keyboardType,
-        maxLines: maxLines,
-        decoration: InputDecoration(
-          labelText: label,
-          prefixIcon: Icon(icon),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8.0),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.green.shade50,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 20, color: Colors.green.shade700),
           ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8.0),
-            borderSide: BorderSide(
-              color: Theme.of(context).colorScheme.outline,
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: GoogleFonts.poppins(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black87,
+                  ),
+                ),
+              ],
             ),
           ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8.0),
-            borderSide: BorderSide(
-              color: Theme.of(context).colorScheme.primary,
-              width: 2,
-            ),
-          ),
-          disabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8.0),
-            borderSide: BorderSide(
-              color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
-            ),
-          ),
-          filled: !enabled,
-          fillColor: !enabled ? Colors.grey.withOpacity(0.1) : null,
-        ),
+        ],
       ),
     );
   }
 
-  Widget _buildOptionTile({
+  Widget _buildChipRow(IconData icon, String label, List<String> items) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, size: 20, color: Colors.green.shade700),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                label,
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: items.map((crop) => Chip(
+              label: Text(
+                crop,
+                style: GoogleFonts.poppins(fontSize: 12),
+              ),
+              backgroundColor: Colors.green.shade50,
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            )).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatsCard() {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.green.shade600, Colors.green.shade800],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.green.withOpacity(0.3),
+            blurRadius: 10,
+            spreadRadius: 2,
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Your Statistics',
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildStatItem('2', 'Active\nClaims', Icons.pending_actions),
+              Container(width: 1, height: 40, color: Colors.white.withOpacity(0.3)),
+              _buildStatItem('5', 'Photos\nTaken', Icons.camera_alt),
+              Container(width: 1, height: 40, color: Colors.white.withOpacity(0.3)),
+              _buildStatItem('8', 'Total\nClaims', Icons.history),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatItem(String value, String label, IconData icon) {
+    return Column(
+      children: [
+        Icon(icon, color: Colors.white, size: 28),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          style: GoogleFonts.poppins(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        Text(
+          label,
+          textAlign: TextAlign.center,
+          style: GoogleFonts.poppins(
+            fontSize: 11,
+            color: Colors.white.withOpacity(0.9),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionTile({
     required IconData icon,
     required String title,
     required String subtitle,
     required VoidCallback onTap,
     bool isDestructive = false,
   }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
-      child: ListTile(
-        leading: Icon(
-          icon,
-          color: isDestructive
-              ? Colors.red
-              : Theme.of(context).colorScheme.primary,
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12.0),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: isDestructive ? Colors.red.shade50 : Colors.green.shade50,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                icon,
+                size: 20,
+                color: isDestructive ? Colors.red : Colors.green.shade700,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.poppins(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: isDestructive ? Colors.red : Colors.black87,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: isDestructive ? Colors.red : Colors.grey.shade400,
+            ),
+          ],
         ),
+      ),
+    );
+  }
+
+  void _showHelpDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
         title: Text(
-          title,
-          style: TextStyle(
-            color: isDestructive ? Colors.red : null,
-            fontWeight: FontWeight.w500,
+          'Help & Support',
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.phone, color: Colors.green),
+              title: const Text('Helpline'),
+              subtitle: const Text('1800-123-4567 (Toll Free)'),
+              contentPadding: EdgeInsets.zero,
+            ),
+            ListTile(
+              leading: const Icon(Icons.email, color: Colors.green),
+              title: const Text('Email'),
+              subtitle: const Text('support@krashibandhu.gov.in'),
+              contentPadding: EdgeInsets.zero,
+            ),
+            ListTile(
+              leading: const Icon(Icons.language, color: Colors.green),
+              title: const Text('Website'),
+              subtitle: const Text('www.pmfby.gov.in'),
+              contentPadding: EdgeInsets.zero,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
           ),
+        ],
+      ),
+    );
+  }
+
+  void _showLogoutDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          'Logout',
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
         ),
-        subtitle: Text(subtitle),
-        trailing: Icon(
-          Icons.arrow_forward_ios,
-          size: 16,
-          color: isDestructive
-              ? Colors.red
-              : Theme.of(context).colorScheme.primary,
-        ),
-        onTap: onTap,
+        content: const Text('Are you sure you want to logout from your account?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await context.read<AuthProvider>().logout();
+              if (context.mounted) {
+                context.go('/login');
+              }
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Logout'),
+          ),
+        ],
       ),
     );
   }

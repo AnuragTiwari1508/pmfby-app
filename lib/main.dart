@@ -20,6 +20,7 @@ import 'src/features/complaints/domain/models/complaint_model.dart';
 
 import 'src/features/crop_monitoring/capture_image_screen.dart';
 import 'src/features/claims/file_claim_screen.dart';
+import 'src/features/claims/claims_list_screen.dart';
 import 'src/features/schemes/schemes_screen.dart';
 
 import 'src/services/firebase_auth_service.dart';
@@ -60,7 +61,7 @@ void main() async {
         ChangeNotifierProvider.value(value: authProvider),
         ChangeNotifierProvider(create: (_) => FirebaseAuthService()),
       ],
-      child: const CropicApp(),
+      child: const KrashiBandhuApp(),
     ),
   );
 }
@@ -167,6 +168,10 @@ GoRouter _buildRouter(BuildContext context) {
 
       // CLAIMS (NEW)
       GoRoute(
+        path: '/claims',
+        builder: (_, __) => const ClaimsListScreen(),
+      ),
+      GoRoute(
         path: '/file-claim',
         builder: (_, __) => const FileClaimScreen(),
       ),
@@ -202,8 +207,8 @@ GoRouter _buildRouter(BuildContext context) {
 }
 
 
-class CropicApp extends StatelessWidget {
-  const CropicApp({super.key});
+class KrashiBandhuApp extends StatelessWidget {
+  const KrashiBandhuApp({super.key});
 
   @override
   Widget build(BuildContext context) {
