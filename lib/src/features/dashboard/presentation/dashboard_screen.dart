@@ -5,6 +5,13 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../services/firebase_auth_service.dart';
 import '../../../services/firestore_service.dart';
 import '../../../models/user_profile.dart';
+import '../../../services/connectivity_service.dart';
+import '../../../services/local_storage_service.dart';
+import '../../../services/auto_sync_service.dart';
+import '../../claims/claims_list_screen.dart';
+import '../../schemes/schemes_screen.dart';
+import '../../profile/presentation/profile_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -17,13 +24,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int _selectedIndex = 0;
   UserProfile? _userProfile;
   bool _isLoading = true;
+  int _pendingUploadsCount = 0;
+  final LocalStorageService _localStorageService = LocalStorageService();
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadUserProfile();
+      _loadPendingUploads();
+      _startAutoSync();
     });
+  }
+
+  void _startAutoSync() {
+    final autoSyncService = context.read<AutoSyncService>();
+    final connectivityService = context.read<ConnectivityService>();
+    autoSyncService.startPeriodicSync(connectivityService);
+  }
+
+  @override
+  void dispose() {
+    final autoSyncService = context.read<AutoSyncService>();
+    autoSyncService.stopPeriodicSync();
+    super.dispose();
+  }
+
+  Future<void> _loadPendingUploads() async {
+    final count = await _localStorageService.getPendingUploadsCount();
+    if (mounted) {
+      setState(() => _pendingUploadsCount = count);
+    }
   }
 
   Future<void> _loadUserProfile() async {
@@ -68,9 +99,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     final List<Widget> screens = [
       _buildHomeScreen(),
-      _buildClaimsScreen(),
-      _buildSchemesScreen(),
-      _buildProfileScreen(),
+      const ClaimsListScreen(),
+      const SchemesScreen(),
+      const ProfileScreen(),
     ];
 
     return Scaffold(
@@ -78,10 +109,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ? const Center(child: CircularProgressIndicator())
           : screens[_selectedIndex],
       floatingActionButton: _selectedIndex == 0
-          ? FloatingActionButton.extended(
-              onPressed: () => context.push('/camera'),
-              label: const Text('Capture Image'),
-              icon: const Icon(Icons.camera_alt_rounded),
+          ? Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Customer Support FAB
+                FloatingActionButton(
+                  heroTag: 'support',
+                  onPressed: _showHelpDialog,
+                  backgroundColor: Colors.blue.shade700,
+                  child: const Icon(Icons.support_agent, size: 28),
+                ),
+                const SizedBox(height: 12),
+                // Camera FAB
+                FloatingActionButton.extended(
+                  heroTag: 'camera',
+                  onPressed: () => context.push('/camera'),
+                  label: const Text('Capture Image'),
+                  icon: const Icon(Icons.camera_alt_rounded),
+                  backgroundColor: Colors.green.shade700,
+                ),
+              ],
             )
           : null,
       bottomNavigationBar: BottomNavigationBar(
@@ -134,10 +181,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
               pinned: true,
               backgroundColor: Colors.green.shade700,
               flexibleSpace: FlexibleSpaceBar(
+                titlePadding: const EdgeInsets.only(left: 16, bottom: 16),
                 title: Text(
                   'Krashi Bandhu',
                   style: GoogleFonts.poppins(
                     fontWeight: FontWeight.bold,
+                    fontSize: 18,
                     color: Colors.white,
                   ),
                 ),
@@ -164,25 +213,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.all(16.0),
+                        padding: const EdgeInsets.only(left: 16, top: 80, right: 16, bottom: 60),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.end,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
                               'नमस्ते, ${_userProfile?.name ?? "किसान"} 🙏',
                               style: GoogleFonts.notoSans(
-                                fontSize: 20,
+                                fontSize: 22,
                                 color: Colors.white,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            const SizedBox(height: 6),
                             Text(
                               'आज का मौसम: धूप ☀️',
                               style: GoogleFonts.notoSans(
-                                fontSize: 14,
-                                color: Colors.white.withOpacity(0.9),
+                                fontSize: 15,
+                                color: Colors.white.withOpacity(0.95),
                               ),
                             ),
                           ],
@@ -191,6 +240,68 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ],
                   ),
                 ),
+              ),
+            ),
+
+            // Offline Indicator Banner
+            SliverToBoxAdapter(
+              child: Consumer<ConnectivityService>(
+                builder: (context, connectivityService, child) {
+                  if (connectivityService.isOnline) {
+                    return const SizedBox.shrink();
+                  }
+                  
+                  return Material(
+                    color: Colors.orange.shade600,
+                    child: InkWell(
+                      onTap: () => context.push('/upload-status'),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.cloud_off_rounded,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    'ऑफलाइन मोड',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    _pendingUploadsCount > 0
+                                        ? '$_pendingUploadsCount फोटो सिंक के लिए बाकी'
+                                        : 'इंटरनेट से कनेक्ट होने पर डेटा सिंक होगा',
+                                    style: TextStyle(
+                                      color: Colors.white.withOpacity(0.95),
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Icon(
+                              Icons.arrow_forward_ios_rounded,
+                              color: Colors.white,
+                              size: 16,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
 
@@ -338,6 +449,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     Icons.policy,
                     Colors.purple,
                     () => setState(() => _selectedIndex = 2),
+                  ),
+                  _buildActionCardWithBadge(
+                    'अपलोड स्टेटस',
+                    'Upload Status',
+                    Icons.cloud_upload,
+                    Colors.indigo,
+                    () => context.push('/upload-status'),
+                    _pendingUploadsCount,
+                  ),
+                  _buildActionCard(
+                    'फसल नुकसान सूचना',
+                    'Crop Loss Intimation',
+                    Icons.report_problem,
+                    Colors.red.shade700,
+                    () => context.push('/crop-loss-intimation'),
+                  ),
+                  _buildActionCard(
+                    'प्रीमियम कैलकुलेटर',
+                    'Premium Calculator',
+                    Icons.calculate_outlined,
+                    Colors.green.shade600,
+                    () => context.push('/premium-calculator'),
                   ),
                   _buildActionCard(
                     'मदद केंद्र',
@@ -505,6 +638,104 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  Widget _buildActionCardWithBadge(
+    String titleHindi,
+    String titleEnglish,
+    IconData icon,
+    Color color,
+    VoidCallback onTap,
+    int badgeCount,
+  ) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                color.withOpacity(0.1),
+                color.withOpacity(0.05),
+              ],
+            ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(icon, size: 28, color: color),
+                  ),
+                  if (badgeCount > 0)
+                    Positioned(
+                      right: -4,
+                      top: -4,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 20,
+                          minHeight: 20,
+                        ),
+                        child: Text(
+                          badgeCount > 99 ? '99+' : '$badgeCount',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                titleHindi,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.notoSans(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                titleEnglish,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.roboto(
+                  fontSize: 9,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildActivityTile(
     String title,
     String time,
@@ -556,172 +787,290 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildClaimsScreen() {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'मेरे दावे (My Claims)',
-          style: GoogleFonts.poppins(),
-        ),
-        backgroundColor: Colors.green.shade700,
-        foregroundColor: Colors.white,
-      ),
-      body: Center(
-        child: Text('Claims screen - Will show list of insurance claims'),
-      ),
-    );
-  }
-
-  Widget _buildSchemesScreen() {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'बीमा योजनाएं (Insurance Schemes)',
-          style: GoogleFonts.poppins(),
-        ),
-        backgroundColor: Colors.green.shade700,
-        foregroundColor: Colors.white,
-      ),
-      body: Center(
-        child: Text('Schemes screen - Will show PMFBY and other schemes'),
-      ),
-    );
-  }
-
-  Widget _buildProfileScreen() {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'प्रोफाइल (Profile)',
-          style: GoogleFonts.poppins(),
-        ),
-        backgroundColor: Colors.green.shade700,
-        foregroundColor: Colors.white,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              await context.read<FirebaseAuthService>().signOut();
-              if (mounted) {
-                context.go('/login');
-              }
-            },
-          ),
-        ],
-      ),
-      body: _userProfile == null
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  // Profile Picture
-                  CircleAvatar(
-                    radius: 60,
-                    backgroundColor: Colors.green.shade100,
-                    child: Text(
-                      _userProfile!.name[0].toUpperCase(),
-                      style: GoogleFonts.poppins(
-                        fontSize: 48,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.green.shade700,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    _userProfile!.name,
-                    style: GoogleFonts.poppins(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    _userProfile!.phoneNumber,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  // Profile Details
-                  _buildProfileDetail('गांव (Village)', _userProfile!.village ?? 'N/A'),
-                  _buildProfileDetail('जिला (District)', _userProfile!.district ?? 'N/A'),
-                  _buildProfileDetail('राज्य (State)', _userProfile!.state ?? 'N/A'),
-                  _buildProfileDetail(
-                    'भूमि क्षेत्र (Land Area)',
-                    '${_userProfile!.landAreaAcres ?? 0} एकड़',
-                  ),
-                  _buildProfileDetail(
-                    'फसलें (Crops)',
-                    _userProfile!.crops.join(', '),
-                  ),
-                ],
-              ),
-            ),
-    );
-  }
-
-  Widget _buildProfileDetail(String label, String value) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: GoogleFonts.notoSans(
-              fontSize: 14,
-              color: Colors.grey.shade600,
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              textAlign: TextAlign.right,
-              style: GoogleFonts.poppins(
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   void _showHelpDialog() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(
-          'मदद केंद्र (Help Center)',
-          style: GoogleFonts.poppins(),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Icon(Icons.support_agent, color: Colors.green.shade700, size: 28),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'ग्राहक सहायता',
+                style: GoogleFonts.poppins(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green.shade700,
+                ),
+              ),
+            ),
+          ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('हेल्पलाइन: 1800-XXX-XXXX'),
-            const SizedBox(height: 8),
-            Text('Email: support@krashibandhu.gov.in'),
-            const SizedBox(height: 8),
-            Text('समय: सोमवार-शुक्रवार, 9 AM - 6 PM'),
+            Text(
+              'Customer Support',
+              style: GoogleFonts.roboto(
+                fontSize: 14,
+                color: Colors.grey.shade600,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 20),
+            
+            // Phone Support Card
+            InkWell(
+              onTap: () => _makePhoneCall('14447'),
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.blue.shade50, Colors.blue.shade100],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.blue.shade200),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade700,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.phone,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'कृषि रक्षक पोर्टल',
+                            style: GoogleFonts.notoSans(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.blue.shade900,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Call 14447',
+                            style: GoogleFonts.roboto(
+                              fontSize: 13,
+                              color: Colors.blue.shade700,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Toll-Free Helpline',
+                            style: GoogleFonts.roboto(
+                              fontSize: 11,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      color: Colors.blue.shade700,
+                      size: 18,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            
+            const SizedBox(height: 16),
+            
+            // WhatsApp Support Card
+            InkWell(
+              onTap: () => _openWhatsApp('7065514447'),
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.green.shade50, Colors.green.shade100],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.green.shade200),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF25D366), // WhatsApp green
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.chat,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'PMFBY व्हाट्सएप चैटबॉट',
+                            style: GoogleFonts.notoSans(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.green.shade900,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Chat: 7065514447',
+                            style: GoogleFonts.roboto(
+                              fontSize: 13,
+                              color: Colors.green.shade700,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'WhatsApp Support',
+                            style: GoogleFonts.roboto(
+                              fontSize: 11,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      color: Colors.green.shade700,
+                      size: 18,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            
+            const SizedBox(height: 16),
+            
+            // Additional Info
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.amber.shade50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.amber.shade200),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.access_time,
+                    color: Colors.amber.shade700,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'सेवा समय: सोमवार-शुक्रवार, 9 AM - 6 PM\nService Hours: Monday-Friday, 9 AM - 6 PM',
+                      style: GoogleFonts.roboto(
+                        fontSize: 11,
+                        color: Colors.grey.shade700,
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('बंद करें (Close)'),
+            child: Text(
+              'बंद करें',
+              style: GoogleFonts.poppins(
+                color: Colors.grey.shade600,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _makePhoneCall(String phoneNumber) async {
+    final Uri phoneUri = Uri(scheme: 'tel', path: phoneNumber);
+    try {
+      if (await canLaunchUrl(phoneUri)) {
+        await launchUrl(phoneUri);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('कॉल नहीं की जा सकती: $phoneNumber'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('त्रुटि: कॉल करने में विफल'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _openWhatsApp(String phoneNumber) async {
+    // WhatsApp URL with country code
+    final String whatsappUrl = 'https://wa.me/91$phoneNumber';
+    final Uri whatsappUri = Uri.parse(whatsappUrl);
+    
+    try {
+      if (await canLaunchUrl(whatsappUri)) {
+        await launchUrl(
+          whatsappUri,
+          mode: LaunchMode.externalApplication,
+        );
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('व्हाट्सएप खोलने में विफल'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('त्रुटि: व्हाट्सएप खोलने में विफल'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }
