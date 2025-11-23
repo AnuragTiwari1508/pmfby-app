@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'providers/auth_provider.dart';
 import '../../../services/firebase_auth_service.dart';
+import '../../../utils/demo_users.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -96,7 +97,7 @@ Future<void> _handleEmailLogin(bool isFarmer) async {
 }
 
 // =====================================================
-// PHONE + OTP LOGIN (FIREBASE AUTH)
+// PHONE + OTP LOGIN (DEMO MODE - AUTO AUTHENTICATE)
 // =====================================================
 Future<void> _sendOTP() async {
   if (_phoneController.text.length != 10) {
@@ -106,42 +107,86 @@ Future<void> _sendOTP() async {
 
   setState(() => _isLoading = true);
 
-  final phoneNumber = '+91${_phoneController.text}';
-  final authService = context.read<FirebaseAuthService>();
-
-  await authService.sendOTP(
-    phoneNumber,
-    (msg) {
-      setState(() {
-        _otpSent = true;
-        _isLoading = false;
-      });
-      _showSuccess('OTP भेजा गया (OTP sent)');
-    },
-    (error) {
-      setState(() => _isLoading = false);
-      _showError(error);
-    },
-  );
+  final phoneNumber = _phoneController.text;
+  
+  // Check if it's a demo user
+  final demoUser = DemoUsers.findByPhone(phoneNumber);
+  
+  if (demoUser != null) {
+    // Demo user - simulate OTP sent
+    await Future.delayed(const Duration(seconds: 1));
+    setState(() {
+      _otpSent = true;
+      _isLoading = false;
+    });
+    _showSuccess('OTP भेजा गया (OTP sent) - Use: 123456 for demo');
+  } else {
+    // Not a demo user - show registration option
+    setState(() => _isLoading = false);
+    _showError('User not found. Please register first.');
+    _showRegistrationDialog();
+  }
 }
 
 Future<void> _verifyOTP() async {
   if (_otpController.text.length != 6) {
-    _showError(' कृपया 6 अंकों का OTP दर्ज करें (Please enter 6-digit OTP)');
+    _showError('कृपया 6 अंकों का OTP दर्ज करें (Please enter 6-digit OTP)');
     return;
   }
 
   setState(() => _isLoading = true);
 
   try {
-    final authService = context.read<FirebaseAuthService>();
-    await authService.verifyOTP(_otpController.text);
-
-    if (mounted) context.go('/dashboard');
+    final phoneNumber = _phoneController.text;
+    final demoUser = DemoUsers.findByPhone(phoneNumber);
+    
+    // For demo users, check if OTP is 123456
+    if (demoUser != null && DemoUsers.isValidOTP(_otpController.text)) {
+      // Simulate successful authentication
+      await Future.delayed(const Duration(seconds: 1));
+      
+      if (mounted) {
+        _showSuccess('Login successful! Welcome ${demoUser['name']}');
+        context.go('/dashboard');
+      }
+    } else {
+      setState(() => _isLoading = false);
+      _showError('गलत OTP (Invalid OTP) - Use: 123456 for demo');
+    }
   } catch (e) {
     setState(() => _isLoading = false);
-    _showError('गलत OTP (Invalid OTP)');
+    _showError('Authentication failed: $e');
   }
+}
+
+void _showRegistrationDialog() {
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Register New User'),
+      content: const Text('Please choose registration type:'),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.pop(context);
+            context.go('/register/farmer');
+          },
+          child: const Text('Register as Farmer'),
+        ),
+        TextButton(
+          onPressed: () {
+            Navigator.pop(context);
+            context.go('/register/officer');
+          },
+          child: const Text('Register as Officer'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+      ],
+    ),
+  );
 }
 
   @override
@@ -208,6 +253,45 @@ Future<void> _verifyOTP() async {
               ),
             ),
             const SizedBox(height: 50),
+
+            // Demo Credentials Info Card
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.white.withOpacity(0.3)),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.info_outline, color: Colors.white, size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Demo Test Accounts',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Farmer: 9876543210 | Officer: 9876543220\nDemo OTP: 123456',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      color: Colors.white.withOpacity(0.9),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 30),
 
             // TABS: OTP / EMAIL LOGIN
             DefaultTabController(
@@ -412,6 +496,65 @@ Future<void> _verifyOTP() async {
             ),
 
             const SizedBox(height: 30),
+
+            // Registration Options
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: Column(
+                children: [
+                  Text(
+                    'New User?',
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () => context.go('/register/farmer'),
+                          icon: const Icon(Icons.person_add),
+                          label: const Text('Register as Farmer'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.white,
+                            side: const BorderSide(color: Colors.white, width: 2),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () => context.go('/register/officer'),
+                          icon: const Icon(Icons.badge),
+                          label: const Text('Register as Officer'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.white,
+                            side: const BorderSide(color: Colors.white, width: 2),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 20),
 
             Text(
               'PMFBY - Pradhan Mantri Fasal Bima Yojana',

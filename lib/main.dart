@@ -129,6 +129,14 @@ GoRouter _buildRouter(BuildContext context) {
         path: '/register',
         builder: (_, __) => const RegistrationScreen(),
       ),
+      GoRoute(
+        path: '/register/farmer',
+        builder: (_, __) => const RegistrationScreen(),
+      ),
+      GoRoute(
+        path: '/register/officer',
+        builder: (_, __) => const RegistrationScreen(),
+      ),
 
       // DASHBOARD
       GoRoute(
