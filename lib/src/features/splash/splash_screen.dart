@@ -78,9 +78,10 @@ class _SplashScreenState extends State<SplashScreen>
       // Add minimum splash duration for smooth UX
       await Future.delayed(const Duration(milliseconds: 2000));
       
-      // Navigate is handled by parent
+      // Navigation is handled by parent - no action needed here
+      debugPrint('✅ Splash screen initialization complete');
     } catch (e) {
-      debugPrint('Initialization error: $e');
+      debugPrint('❌ Initialization error: $e');
       // Still proceed after error
       await Future.delayed(const Duration(milliseconds: 2000));
     }

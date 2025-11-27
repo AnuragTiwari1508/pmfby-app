@@ -344,6 +344,7 @@ class KrashiBandhuApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       home: SplashScreen(
         onInitializationComplete: () async {
+          debugPrint('🚀 Starting app initialization...');
           await initializeApp();
           
           // Initialize providers after splash
@@ -355,9 +356,15 @@ class KrashiBandhuApp extends StatelessWidget {
           final connectivityService = ConnectivityService();
           final autoSyncService = AutoSyncService();
           
+          debugPrint('✅ All initialization complete');
+          
+          // Small delay to ensure context is ready
+          await Future.delayed(const Duration(milliseconds: 100));
+          
           // Navigate to main app with providers
           if (context.mounted) {
-            Navigator.of(context).pushReplacement(
+            debugPrint('🔄 Navigating to main app...');
+            await Navigator.of(context).pushReplacement(
               MaterialPageRoute(
                 builder: (_) => MultiProvider(
                   providers: [
@@ -371,6 +378,9 @@ class KrashiBandhuApp extends StatelessWidget {
                 ),
               ),
             );
+            debugPrint('✅ Navigation complete');
+          } else {
+            debugPrint('⚠️ Context not mounted, navigation skipped');
           }
         },
       ),
