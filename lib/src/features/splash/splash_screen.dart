@@ -136,7 +136,7 @@ class _SplashScreenState extends State<SplashScreen>
                 // App Name with Fade Animation
                 FadeTransition(
                   opacity: _fadeAnimation,
-                  Column(
+                  child: Column(
                     children: [
                       Text(
                         'Krishi Bandhu',
