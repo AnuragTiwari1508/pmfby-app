@@ -334,48 +334,46 @@ class KrashiBandhuApp extends StatelessWidget {
       ),
     );
 
-    return Consumer<ThemeProvider>(
-      builder: (context, themeProvider, child) {
-        return MaterialApp(
-          title: 'Krashi Bandhu',
-          theme: lightTheme,
-          darkTheme: darkTheme,
-          themeMode: themeProvider.themeMode,
-          debugShowCheckedModeBanner: false,
-          home: SplashScreen(
-            onInitializationComplete: () async {
-              await initializeApp();
-              
-              // Initialize providers after splash
-              final authService = AuthService();
-              await authService.initialize();
-              final authProvider = AuthProvider(authService);
-              await authProvider.initialize();
-              
-              final connectivityService = ConnectivityService();
-              final autoSyncService = AutoSyncService();
-              
-              // Navigate to main app with providers
-              if (context.mounted) {
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(
-                    builder: (_) => MultiProvider(
-                      providers: [
-                        ChangeNotifierProvider.value(value: authProvider),
-                        ChangeNotifierProvider(create: (_) => FirebaseAuthService()),
-                        ChangeNotifierProvider.value(value: connectivityService),
-                        Provider.value(value: autoSyncService),
-                        ChangeNotifierProvider(create: (_) => ImageUploadService()),
-                      ],
-                      child: const MainApp(),
-                    ),
-                  ),
-                );
-              }
-            },
-          ),
-        );
-      },
+    final themeProvider = context.watch<ThemeProvider>();
+    
+    return MaterialApp(
+      title: 'Krashi Bandhu',
+      theme: lightTheme,
+      darkTheme: darkTheme,
+      themeMode: themeProvider.themeMode,
+      debugShowCheckedModeBanner: false,
+      home: SplashScreen(
+        onInitializationComplete: () async {
+          await initializeApp();
+          
+          // Initialize providers after splash
+          final authService = AuthService();
+          await authService.initialize();
+          final authProvider = AuthProvider(authService);
+          await authProvider.initialize();
+          
+          final connectivityService = ConnectivityService();
+          final autoSyncService = AutoSyncService();
+          
+          // Navigate to main app with providers
+          if (context.mounted) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (_) => MultiProvider(
+                  providers: [
+                    ChangeNotifierProvider.value(value: authProvider),
+                    ChangeNotifierProvider(create: (_) => FirebaseAuthService()),
+                    ChangeNotifierProvider.value(value: connectivityService),
+                    Provider.value(value: autoSyncService),
+                    ChangeNotifierProvider(create: (_) => ImageUploadService()),
+                  ],
+                  child: const MainApp(),
+                ),
+              ),
+            );
+          }
+        },
+      ),
     );
   }
 }
