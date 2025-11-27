@@ -57,7 +57,7 @@ dependencies:
   # Connectivity & Background Services
   connectivity_plus: ^6.1.0
   flutter_local_notifications: ^18.0.1
-  workmanager: ^0.5.2
+  workmanager: ^0.6.0
   
   # Utilities
   intl: ^0.19.0

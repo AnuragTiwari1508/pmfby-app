@@ -39,7 +39,12 @@ import 'src/features/splash/splash_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const KrashiBandhuApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => ThemeProvider(),
+      child: const KrashiBandhuApp(),
+    ),
+  );
 }
 
 // Global initialization function to be called from splash screen
@@ -356,7 +361,6 @@ class KrashiBandhuApp extends StatelessWidget {
                   MaterialPageRoute(
                     builder: (_) => MultiProvider(
                       providers: [
-                        ChangeNotifierProvider(create: (_) => ThemeProvider()),
                         ChangeNotifierProvider.value(value: authProvider),
                         ChangeNotifierProvider(create: (_) => FirebaseAuthService()),
                         ChangeNotifierProvider.value(value: connectivityService),
