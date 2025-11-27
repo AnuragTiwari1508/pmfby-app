@@ -237,6 +237,7 @@ class _PremiumCalculatorScreenState extends State<PremiumCalculatorScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             '$label: ',

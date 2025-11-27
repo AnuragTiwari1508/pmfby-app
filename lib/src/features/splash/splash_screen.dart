@@ -76,7 +76,7 @@ class _SplashScreenState extends State<SplashScreen>
       await widget.onInitializationComplete();
       
       // Add minimum splash duration for smooth UX
-      await Future.delayed(const Duration(milliseconds: 2000));
+      await Future.delayed(const Duration(milliseconds: 700));
       
       // Navigation is handled by parent - no action needed here
       debugPrint('✅ Splash screen initialization complete');
@@ -136,10 +136,10 @@ class _SplashScreenState extends State<SplashScreen>
                 // App Name with Fade Animation
                 FadeTransition(
                   opacity: _fadeAnimation,
-                  child: Column(
+                  Column(
                     children: [
                       Text(
-                        'Krashi Bandhu',
+                        'Krishi Bandhu',
                         style: GoogleFonts.poppins(
                           fontSize: 32,
                           fontWeight: FontWeight.bold,

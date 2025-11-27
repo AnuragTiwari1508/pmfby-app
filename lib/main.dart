@@ -369,7 +369,7 @@ class _KrashiBandhuAppState extends State<KrashiBandhuApp> {
     final themeProvider = context.watch<ThemeProvider>();
     
     return MaterialApp(
-      title: 'Krashi Bandhu',
+      title: 'Krishi Bandhu',
       theme: lightTheme,
       darkTheme: darkTheme,
       themeMode: themeProvider.themeMode,
@@ -399,7 +399,7 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       routerConfig: _buildRouter(context),
-      title: 'Krashi Bandhu',
+      title: 'Krishi Bandhu',
       debugShowCheckedModeBanner: false,
     );
   }

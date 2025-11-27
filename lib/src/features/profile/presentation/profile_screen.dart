@@ -243,7 +243,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       // Version Info
                       Center(
                         child: Text(
-                          'Krashi Bandhu v1.0.0',
+                          'Krishi Bandhu v1.0.0',
                           style: GoogleFonts.poppins(
                             fontSize: 12,
                             color: Colors.grey.shade600,

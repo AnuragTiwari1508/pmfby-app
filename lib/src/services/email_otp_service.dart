@@ -81,9 +81,9 @@ class EmailOTPService {
       }
 
       final message = Message()
-        ..from = Address(_getSenderEmail(), 'Krashi Bandhu')
+        ..from = Address(_getSenderEmail(), 'Krishi Bandhu')
         ..recipients.add(email)
-        ..subject = 'Your Krashi Bandhu OTP - $otp'
+        ..subject = 'Your Krishi Bandhu OTP - $otp'
         ..html = _buildEmailTemplate(otp, purpose);
 
       try {
@@ -330,12 +330,12 @@ class EmailOTPService {
       </div>
       
       <p class="message">
-        Thank you for using Krashi Bandhu! 🙏
+        Thank you for using Krishi Bandhu! 🙏
       </p>
     </div>
     
     <div class="footer">
-      <p>© 2024 Krashi Bandhu - PMFBY Insurance Platform</p>
+      <p>© 2024 Krishi Bandhu - PMFBY Insurance Platform</p>
       <p>
         <a href="#">Help Center</a> | 
         <a href="#">Contact Support</a> | 

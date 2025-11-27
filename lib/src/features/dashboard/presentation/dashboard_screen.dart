@@ -183,7 +183,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               flexibleSpace: FlexibleSpaceBar(
                 titlePadding: const EdgeInsets.only(left: 16, bottom: 16),
                 title: Text(
-                  'Krashi Bandhu',
+                  'Krishi Bandhu',
                   style: GoogleFonts.poppins(
                     fontWeight: FontWeight.bold,
                     fontSize: 18,
