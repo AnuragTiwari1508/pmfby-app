@@ -6,9 +6,9 @@ import 'package:provider/provider.dart';
 import 'dart:io';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
-import '../../../services/connectivity_service.dart';
-import '../../../services/local_storage_service.dart';
-import '../../../services/storage_service.dart';
+import '../../services/connectivity_service.dart';
+import '../../services/local_storage_service.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:convert';
 
 enum UploadStatus {
@@ -103,7 +103,7 @@ class EnhancedBatchUploadScreen extends StatefulWidget {
 class _EnhancedBatchUploadScreenState extends State<EnhancedBatchUploadScreen> {
   final ImagePicker _picker = ImagePicker();
   final LocalStorageService _localStorage = LocalStorageService();
-  final StorageService _storageService = StorageService();
+  final FirebaseStorage _storage = FirebaseStorage.instance;
   List<ImageUploadItem> _uploadQueue = [];
   bool _isUploading = false;
   bool _isLoadingFromStorage = true;
@@ -322,7 +322,8 @@ class _EnhancedBatchUploadScreenState extends State<EnhancedBatchUploadScreen> {
       final fileName = path.basename(item.localPath);
       final remotePath = 'crop_images/${DateTime.now().millisecondsSinceEpoch}_$fileName';
 
-      await _storageService.uploadFile(file, remotePath);
+      final ref = _storage.ref().child(remotePath);
+      await ref.putFile(file);
 
       setState(() {
         final index = _uploadQueue.indexOf(item);
