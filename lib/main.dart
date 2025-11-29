@@ -11,7 +11,9 @@ import 'src/features/auth/data/services/auth_service.dart';
 import 'src/features/auth/presentation/providers/auth_provider.dart';
 import 'src/features/auth/domain/models/user_model.dart';
 import 'src/features/dashboard/presentation/dashboard_screen.dart';
+import 'src/features/officer/officer_dashboard_screen.dart';
 import 'src/features/camera/presentation/camera_screen.dart';
+import 'src/features/camera/presentation/enhanced_camera_screen.dart';
 import 'src/features/camera/presentation/image_preview_screen.dart';
 import 'src/features/profile/presentation/profile_screen.dart';
 import 'src/features/complaints/presentation/screens/complaints_screen.dart';
@@ -22,48 +24,62 @@ import 'src/features/crop_monitoring/capture_image_screen.dart';
 import 'src/features/claims/file_claim_screen.dart';
 import 'src/features/claims/claims_list_screen.dart';
 import 'src/features/schemes/schemes_screen.dart';
+import 'src/features/uploads/upload_status_screen.dart';
+import 'src/features/premium_calculator/premium_calculator_screen.dart';
+import 'src/features/crop_loss/presentation/crop_loss_intimation_screen.dart';
+import 'src/features/crop_loss/presentation/file_crop_loss_screen.dart';
+import 'src/features/multi_image/multi_image_capture_screen.dart';
+import 'src/features/multi_image/batch_upload_progress_screen.dart';
 
 import 'src/services/firebase_auth_service.dart';
+import 'src/services/image_upload_service.dart';
+import 'src/services/connectivity_service.dart';
+import 'src/services/auto_sync_service.dart';
+import 'src/features/splash/splash_screen.dart';
 
-void main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => ThemeProvider(),
+      child: const KrashiBandhuApp(),
+    ),
+  );
+}
 
+// Global initialization function to be called from splash screen
+Future<void> initializeApp() async {
   // Firebase initialization
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+    debugPrint('✅ Firebase initialized successfully');
   } catch (e) {
-    debugPrint('Firebase initialization error: $e');
+    debugPrint('⚠️ Firebase initialization error: $e');
   }
 
   // Local Auth initialization (with demo user logic)
   final authService = AuthService();
   await authService.initialize();
+  debugPrint('✅ Auth service initialized');
 
   final allUsers = authService.getAllUsers();
-  debugPrint('Number of users in database: ${allUsers.length}');
+  debugPrint('📊 Number of users in database: ${allUsers.length}');
 
   if (allUsers.isEmpty) {
-    debugPrint('Creating demo users...');
+    debugPrint('🔧 Creating demo users...');
     await _createDemoUsers(authService);
-    debugPrint('Demo users created successfully');
+    debugPrint('✅ Demo users created successfully');
   }
 
-  final authProvider = AuthProvider(authService);
-  await authProvider.initialize();
-  debugPrint('AuthProvider initialized - Is logged in: ${authProvider.isLoggedIn}');
-
-  runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => ThemeProvider()),
-        ChangeNotifierProvider.value(value: authProvider),
-        ChangeNotifierProvider(create: (_) => FirebaseAuthService()),
-      ],
-      child: const KrashiBandhuApp(),
-    ),
-  );
+  // Initialize connectivity and auto-sync services
+  debugPrint('🔄 Initializing connectivity and sync services...');
+  final connectivityService = ConnectivityService();
+  final autoSyncService = AutoSyncService();
+  await autoSyncService.initializeNotifications();
+  await autoSyncService.initializeBackgroundSync();
+  debugPrint('✅ All services initialized successfully');
 }
 
 Future<void> _createDemoUsers(AuthService authService) async {
@@ -145,10 +161,16 @@ GoRouter _buildRouter(BuildContext context) {
         builder: (_, __) => const DashboardScreen(),
       ),
 
+      // OFFICER DASHBOARD
+      GoRoute(
+        path: '/officer-dashboard',
+        builder: (_, __) => const OfficerDashboardScreen(),
+      ),
+
       // CAMERA
       GoRoute(
         path: '/camera',
-        builder: (_, __) => const CameraScreen(),
+        builder: (_, __) => const EnhancedCameraScreen(),
         routes: [
           GoRoute(
             path: 'preview',
@@ -182,6 +204,38 @@ GoRouter _buildRouter(BuildContext context) {
         builder: (_, __) => const SchemesScreen(),
       ),
 
+      // UPLOAD STATUS
+      GoRoute(
+        path: '/upload-status',
+        builder: (_, __) => const UploadStatusScreen(),
+      ),
+
+      // PREMIUM CALCULATOR
+      GoRoute(
+        path: '/premium-calculator',
+        builder: (_, __) => const PremiumCalculatorScreen(),
+      ),
+
+      // CROP LOSS INTIMATION
+      GoRoute(
+        path: '/crop-loss-intimation',
+        builder: (_, __) => const CropLossIntimationScreen(),
+      ),
+      GoRoute(
+        path: '/file-crop-loss',
+        builder: (_, __) => const FileCropLossScreen(),
+      ),
+
+      // MULTI-IMAGE CAPTURE
+      GoRoute(
+        path: '/multi-image-capture',
+        builder: (_, __) => const MultiImageCaptureScreen(),
+      ),
+      GoRoute(
+        path: '/batch-upload-progress',
+        builder: (_, __) => const BatchUploadProgressScreen(),
+      ),
+
       // PROFILE
       GoRoute(
         path: '/profile',
@@ -207,8 +261,40 @@ GoRouter _buildRouter(BuildContext context) {
 }
 
 
-class KrashiBandhuApp extends StatelessWidget {
+class KrashiBandhuApp extends StatefulWidget {
   const KrashiBandhuApp({super.key});
+
+  @override
+  State<KrashiBandhuApp> createState() => _KrashiBandhuAppState();
+}
+
+class _KrashiBandhuAppState extends State<KrashiBandhuApp> {
+  bool _initialized = false;
+  late AuthProvider _authProvider;
+  late ConnectivityService _connectivityService;
+  late AutoSyncService _autoSyncService;
+
+  Future<void> _initialize() async {
+    debugPrint('🚀 Starting app initialization...');
+    await initializeApp();
+    
+    // Initialize providers after splash
+    final authService = AuthService();
+    await authService.initialize();
+    _authProvider = AuthProvider(authService);
+    await _authProvider.initialize();
+    
+    _connectivityService = ConnectivityService();
+    _autoSyncService = AutoSyncService();
+    
+    debugPrint('✅ All initialization complete');
+    
+    if (mounted) {
+      setState(() {
+        _initialized = true;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -280,17 +366,41 @@ class KrashiBandhuApp extends StatelessWidget {
       ),
     );
 
-    return Consumer<ThemeProvider>(
-      builder: (context, themeProvider, child) {
-        return MaterialApp.router(
-          routerConfig: _buildRouter(context),
-          title: 'Krashi Bandhu',
-          theme: lightTheme,
-          darkTheme: darkTheme,
-          themeMode: themeProvider.themeMode,
-          debugShowCheckedModeBanner: false,
-        );
-      },
+    final themeProvider = context.watch<ThemeProvider>();
+    
+    return MaterialApp(
+      title: 'Krishi Bandhu',
+      theme: lightTheme,
+      darkTheme: darkTheme,
+      themeMode: themeProvider.themeMode,
+      debugShowCheckedModeBanner: false,
+      home: _initialized
+          ? MultiProvider(
+              providers: [
+                ChangeNotifierProvider.value(value: _authProvider),
+                ChangeNotifierProvider(create: (_) => FirebaseAuthService()),
+                ChangeNotifierProvider.value(value: _connectivityService),
+                Provider.value(value: _autoSyncService),
+                ChangeNotifierProvider(create: (_) => ImageUploadService()),
+              ],
+              child: const MainApp(),
+            )
+          : SplashScreen(
+              onInitializationComplete: _initialize,
+            ),
+    );
+  }
+}
+
+class MainApp extends StatelessWidget {
+  const MainApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp.router(
+      routerConfig: _buildRouter(context),
+      title: 'Krishi Bandhu',
+      debugShowCheckedModeBanner: false,
     );
   }
 }

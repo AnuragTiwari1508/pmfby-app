@@ -4,7 +4,10 @@ import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'dart:io';
+import '../../services/local_storage_service.dart';
+import '../../services/connectivity_service.dart';
 
 class CaptureImageScreen extends StatefulWidget {
   const CaptureImageScreen({super.key});
@@ -102,23 +105,87 @@ class _CaptureImageScreenState extends State<CaptureImageScreen> {
       return;
     }
 
+    if (_position == null) {
+      _showError('GPS स्थान उपलब्ध नहीं है (GPS location not available)');
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     try {
-      // Here you would upload to Firebase Storage
-      // For now, just simulate upload
-      await Future.delayed(const Duration(seconds: 2));
+      final localStorageService = LocalStorageService();
+      final connectivityService = context.read<ConnectivityService>();
+      
+      // Show crop type selection dialog
+      final cropType = await _showCropTypeDialog();
+      if (cropType == null || !mounted) {
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      // Save image locally
+      final uploadId = DateTime.now().millisecondsSinceEpoch.toString();
+      final savedImagePath = await localStorageService.saveImageLocally(File(_image!.path), uploadId);
+      
+      // Create pending upload
+      final upload = PendingUpload(
+        id: uploadId,
+        imagePath: savedImagePath,
+        cropType: cropType,
+        description: _locationName ?? 'Unknown location',
+        latitude: _position!.latitude,
+        longitude: _position!.longitude,
+        capturedAt: DateTime.now(),
+        status: SyncStatus.pending,
+      );
+
+      await localStorageService.savePendingUpload(upload);
 
       if (mounted) {
-        _showSuccess('फोटो सफलतापूर्वक अपलोड हुई! (Image uploaded successfully!)');
-        await Future.delayed(const Duration(seconds: 1));
+        if (connectivityService.isOnline) {
+          _showSuccess('फोटो सेव हुई और सिंक हो रही है! (Image saved and syncing!)');
+        } else {
+          _showSuccess('फोटो सेव हुई! ऑनलाइन होने पर सिंक होगी (Image saved! Will sync when online)');
+        }
+        await Future.delayed(const Duration(seconds: 2));
         context.pop();
       }
     } catch (e) {
-      _showError('अपलोड त्रुटि: $e');
+      _showError('सेव त्रुटि: $e');
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
+  }
+
+  Future<String?> _showCropTypeDialog() async {
+    return showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          'फसल का प्रकार चुनें',
+          style: GoogleFonts.notoSans(fontWeight: FontWeight.w600),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            'गेहूं (Wheat)',
+            'धान (Rice)',
+            'मक्का (Maize)',
+            'बाजरा (Millet)',
+            'दालें (Pulses)',
+            'सोयाबीन (Soybean)',
+            'कपास (Cotton)',
+            'गन्ना (Sugarcane)',
+            'अन्य (Other)',
+          ].map((crop) => ListTile(
+            title: Text(crop, style: GoogleFonts.notoSans()),
+            onTap: () => Navigator.pop(context, crop.split(' ')[0]),
+          )).toList(),
+        ),
+      ),
+    );
   }
 
   void _showError(String message) {
