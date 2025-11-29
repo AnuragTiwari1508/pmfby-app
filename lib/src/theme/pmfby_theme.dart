@@ -42,8 +42,8 @@ class PMFBYTheme {
     useMaterial3: true,
     colorScheme: ColorScheme.light(
       primary: PMFBYColors.primaryGreen,
-      secondary: PMFBYColors.accentOrange,
-      tertiary: PMFBYColors.govBlue,
+      secondary: PMFBYColors.accentGold,
+      tertiary: PMFBYColors.accentBlue,
       surface: PMFBYColors.backgroundWhite,
       background: PMFBYColors.backgroundLight,
       error: PMFBYColors.rejected,
