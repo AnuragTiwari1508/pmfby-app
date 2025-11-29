@@ -5,33 +5,36 @@ class PMFBYColors {
   static const Color saffron = Color(0xFFFF9933); // India Flag Saffron
   static const Color white = Color(0xFFFFFFFF);
   static const Color indiaGreen = Color(0xFF138808); // India Flag Green
-  static const Color navyBlue = Color(0xFF000080); // Ashoka Chakra Blue
+  static const Color navyBlue = Color(0xFF1565C0); // Government Blue
   
-  // PMFBY Brand Colors
-  static const Color primaryGreen = Color(0xFF2E7D32); // Dark Green
-  static const Color lightGreen = Color(0xFF66BB6A); // Light Green
-  static const Color accentOrange = Color(0xFFFF9800); // Alert Orange
-  static const Color govBlue = Color(0xFF1976D2); // Government Blue
+  // PMFBY Brand Colors - Professional & Clean
+  static const Color primaryGreen = Color(0xFF1B5E20); // Deep Forest Green
+  static const Color lightGreen = Color(0xFF4CAF50); // Fresh Green
+  static const Color accentBlue = Color(0xFF0277BD); // Professional Blue
+  static const Color accentGold = Color(0xFFFFA000); // Government Gold
   
   // Status Colors
-  static const Color approved = Color(0xFF4CAF50);
-  static const Color pending = Color(0xFFFF9800);
-  static const Color rejected = Color(0xFFF44336);
-  static const Color draft = Color(0xFF9E9E9E);
+  static const Color approved = Color(0xFF2E7D32);
+  static const Color pending = Color(0xFFF57C00);
+  static const Color rejected = Color(0xFFC62828);
+  static const Color draft = Color(0xFF616161);
   
-  // Background Colors
-  static const Color backgroundLight = Color(0xFFF5F5F5);
+  // Background Colors - Clean & Professional
+  static const Color backgroundLight = Color(0xFFFAFAFA);
   static const Color backgroundWhite = Color(0xFFFFFFFF);
   static const Color cardBackground = Color(0xFFFFFFFF);
+  static const Color surfaceLight = Color(0xFFF5F5F5);
   
   // Text Colors
   static const Color textPrimary = Color(0xFF212121);
-  static const Color textSecondary = Color(0xFF757575);
+  static const Color textSecondary = Color(0xFF616161);
   static const Color textLight = Color(0xFFFFFFFF);
+  static const Color textHint = Color(0xFF9E9E9E);
   
   // Government Scheme Colors
-  static const Color schemeBlue = Color(0xFF0D47A1);
-  static const Color schemeGold = Color(0xFFFFD700);
+  static const Color schemeBlue = Color(0xFF1565C0);
+  static const Color schemeGreen = Color(0xFF2E7D32);
+  static const Color schemeOrange = Color(0xFFF57C00);
 }
 
 class PMFBYTheme {
@@ -53,37 +56,43 @@ class PMFBYTheme {
     appBarTheme: const AppBarTheme(
       backgroundColor: PMFBYColors.primaryGreen,
       foregroundColor: PMFBYColors.textLight,
-      elevation: 0,
+      elevation: 2,
       centerTitle: false,
+      shadowColor: Colors.black26,
     ),
     cardTheme: CardThemeData(
       color: PMFBYColors.cardBackground,
-      elevation: 2,
+      elevation: 1,
+      shadowColor: Colors.black12,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
       ),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: PMFBYColors.primaryGreen,
         foregroundColor: PMFBYColors.textLight,
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(12),
         ),
-        elevation: 2,
+        elevation: 3,
       ),
     ),
     floatingActionButtonTheme: const FloatingActionButtonThemeData(
-      backgroundColor: PMFBYColors.accentOrange,
+      backgroundColor: PMFBYColors.accentBlue,
       foregroundColor: PMFBYColors.textLight,
+      elevation: 4,
     ),
     bottomNavigationBarTheme: const BottomNavigationBarThemeData(
       backgroundColor: PMFBYColors.backgroundWhite,
       selectedItemColor: PMFBYColors.primaryGreen,
       unselectedItemColor: PMFBYColors.textSecondary,
       type: BottomNavigationBarType.fixed,
-      elevation: 8,
+      elevation: 16,
+      selectedLabelStyle: TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+      unselectedLabelStyle: TextStyle(fontSize: 11),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,

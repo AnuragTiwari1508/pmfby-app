@@ -12,7 +12,7 @@ import '../../claims/claims_list_screen.dart';
 import '../../schemes/schemes_screen.dart';
 import '../../profile/presentation/profile_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../satellite/satellite_monitoring_screen.dart';
+import '../../satellite/enhanced_satellite_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -102,7 +102,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _buildHomeScreen(),
       const ClaimsListScreen(),
       const SchemesScreen(),
-      const SatelliteMonitoringScreen(),
+      const EnhancedSatelliteScreen(),
       const ProfileScreen(),
     ];
 
@@ -146,8 +146,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
           currentIndex: _selectedIndex,
-          selectedItemColor: const Color(0xFF138808),
-          unselectedItemColor: Colors.grey.shade600,
+          selectedItemColor: const Color(0xFF1B5E20),
+          unselectedItemColor: const Color(0xFF616161),
           selectedFontSize: 12,
           unselectedFontSize: 11,
           elevation: 0,
@@ -187,25 +187,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildHomeScreen() {
     return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Colors.green.shade50,
-            Colors.white,
-          ],
-        ),
-      ),
+      color: const Color(0xFFFAFAFA),
       child: SafeArea(
         child: CustomScrollView(
           slivers: [
             // App Bar
             SliverAppBar(
-              expandedHeight: 280,
+              expandedHeight: 200,
               floating: false,
               pinned: true,
-              backgroundColor: const Color(0xFF138808),
+              backgroundColor: const Color(0xFF1B5E20),
               flexibleSpace: FlexibleSpaceBar(
                 titlePadding: const EdgeInsets.only(left: 16, bottom: 16),
                 title: Column(
@@ -234,47 +225,85 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 background: Container(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
                       colors: [
-                        const Color(0xFFFF9933),
-                        const Color(0xFFFFFFFF),
-                        const Color(0xFF138808),
+                        const Color(0xFF1B5E20),
+                        const Color(0xFF2E7D32),
                       ],
                     ),
                   ),
                   child: Stack(
                     children: [
                       Positioned(
-                        right: -50,
-                        top: -50,
-                        child: Icon(
-                          Icons.agriculture,
-                          size: 200,
-                          color: Colors.white.withOpacity(0.1),
+                        right: -30,
+                        top: -30,
+                        child: Container(
+                          width: 150,
+                          height: 150,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white.withOpacity(0.05),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        left: -50,
+                        bottom: -50,
+                        child: Container(
+                          width: 180,
+                          height: 180,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white.withOpacity(0.05),
+                          ),
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.only(left: 16, top: 80, right: 16, bottom: 60),
+                        padding: const EdgeInsets.only(left: 20, top: 70, right: 20, bottom: 50),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(
-                              'नमस्ते, ${_userProfile?.name ?? "किसान"} 🙏',
-                              style: GoogleFonts.notoSans(
-                                fontSize: 22,
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              'आज का मौसम: धूप ☀️',
-                              style: GoogleFonts.notoSans(
-                                fontSize: 15,
-                                color: Colors.white.withOpacity(0.95),
-                              ),
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Icon(
+                                    Icons.verified_user,
+                                    color: Colors.white,
+                                    size: 28,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'नमस्ते',
+                                        style: GoogleFonts.notoSansDevanagari(
+                                          fontSize: 16,
+                                          color: Colors.white.withOpacity(0.9),
+                                          fontWeight: FontWeight.w400,
+                                        ),
+                                      ),
+                                      Text(
+                                        _userProfile?.name ?? "किसान भाई",
+                                        style: GoogleFonts.notoSans(
+                                          fontSize: 20,
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -463,45 +492,57 @@ class _DashboardScreenState extends State<DashboardScreen> {
             // PMFBY Info Banner
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
                 child: InkWell(
                   onTap: () => context.push('/pmfby-info'),
+                  borderRadius: BorderRadius.circular(16),
                   child: Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [Color(0xFFFF9933), Color(0xFF138808)],
+                        colors: [Color(0xFF1565C0), Color(0xFF0D47A1)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
+                          color: const Color(0xFF1565C0).withOpacity(0.3),
+                          blurRadius: 12,
+                          offset: const Offset(0, 6),
                         ),
                       ],
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.info_outline, color: Colors.white, size: 40),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.account_balance,
+                            color: Colors.white,
+                            size: 32,
+                          ),
+                        ),
                         const SizedBox(width: 16),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'PMFBY के बारे में जानें',
+                                'योजना की जानकारी',
                                 style: GoogleFonts.notoSansDevanagari(
                                   color: Colors.white,
-                                  fontSize: 16,
+                                  fontSize: 18,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'योजना, प्रीमियम, हेल्पलाइन नंबर',
+                                'प्रीमियम दरें • हेल्पलाइन • सहायता',
                                 style: GoogleFonts.notoSansDevanagari(
                                   color: Colors.white.withOpacity(0.9),
                                   fontSize: 13,
@@ -510,7 +551,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             ],
                           ),
                         ),
-                        const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 20),
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            Icons.arrow_forward_ios,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                        ),
                       ],
                     ),
                   ),
