@@ -30,6 +30,7 @@ import 'src/features/crop_loss/presentation/crop_loss_intimation_screen.dart';
 import 'src/features/crop_loss/presentation/file_crop_loss_screen.dart';
 import 'src/features/multi_image/multi_image_capture_screen.dart';
 import 'src/features/multi_image/batch_upload_progress_screen.dart';
+import 'src/features/satellite/satellite_monitoring_screen.dart';
 
 import 'src/services/firebase_auth_service.dart';
 import 'src/services/image_upload_service.dart';
@@ -240,6 +241,12 @@ GoRouter _buildRouter(BuildContext context) {
       GoRoute(
         path: '/profile',
         builder: (_, __) => const ProfileScreen(),
+      ),
+
+      // SATELLITE MONITORING
+      GoRoute(
+        path: '/satellite',
+        builder: (_, __) => const SatelliteMonitoringScreen(),
       ),
 
       // COMPLAINTS

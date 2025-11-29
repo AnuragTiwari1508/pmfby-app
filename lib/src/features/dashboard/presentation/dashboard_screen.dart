@@ -12,6 +12,7 @@ import '../../claims/claims_list_screen.dart';
 import '../../schemes/schemes_screen.dart';
 import '../../profile/presentation/profile_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../satellite/satellite_monitoring_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -101,6 +102,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _buildHomeScreen(),
       const ClaimsListScreen(),
       const SchemesScreen(),
+      const SatelliteMonitoringScreen(),
       const ProfileScreen(),
     ];
 
@@ -149,6 +151,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.policy),
             label: 'योजना (Schemes)',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.satellite_alt),
+            label: '🛰️ Satellite',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
