@@ -33,7 +33,6 @@ import 'src/features/multi_image/batch_upload_progress_screen.dart';
 import 'src/features/satellite/satellite_monitoring_screen.dart';
 import 'src/features/satellite/enhanced_satellite_screen.dart';
 import 'src/features/pmfby_info/pmfby_info_screen.dart';
-import 'src/theme/pmfby_theme.dart';
 import 'src/theme/app_themes.dart';
 import 'src/localization/app_localizations.dart';
 
