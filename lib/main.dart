@@ -31,6 +31,8 @@ import 'src/features/crop_loss/presentation/file_crop_loss_screen.dart';
 import 'src/features/multi_image/multi_image_capture_screen.dart';
 import 'src/features/multi_image/batch_upload_progress_screen.dart';
 import 'src/features/satellite/satellite_monitoring_screen.dart';
+import 'src/features/pmfby_info/pmfby_info_screen.dart';
+import 'src/theme/pmfby_theme.dart';
 
 import 'src/services/firebase_auth_service.dart';
 import 'src/services/image_upload_service.dart';
@@ -249,6 +251,12 @@ GoRouter _buildRouter(BuildContext context) {
         builder: (_, __) => const SatelliteMonitoringScreen(),
       ),
 
+      // PMFBY INFO
+      GoRoute(
+        path: '/pmfby-info',
+        builder: (_, __) => const PMFBYInfoScreen(),
+      ),
+
       // COMPLAINTS
       GoRoute(
         path: '/complaints',
@@ -406,8 +414,9 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       routerConfig: _buildRouter(context),
-      title: 'Krishi Bandhu',
+      title: 'PMFBY - Pradhan Mantri Fasal Bima Yojana',
       debugShowCheckedModeBanner: false,
+      theme: PMFBYTheme.lightTheme,
     );
   }
 }
