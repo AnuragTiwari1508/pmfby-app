@@ -133,32 +133,51 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ],
             )
           : null,
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.green.shade700,
-        unselectedItemColor: Colors.grey,
-        onTap: (index) => setState(() => _selectedIndex = index),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          currentIndex: _selectedIndex,
+          selectedItemColor: const Color(0xFF138808),
+          unselectedItemColor: Colors.grey.shade600,
+          selectedFontSize: 12,
+          unselectedFontSize: 11,
+          elevation: 0,
+          backgroundColor: Colors.white,
+          onTap: (index) => setState(() => _selectedIndex = index),
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'होम (Home)',
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home),
+            label: 'होम',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.description),
-            label: 'दावे (Claims)',
+            icon: Icon(Icons.receipt_long_outlined),
+            activeIcon: Icon(Icons.receipt_long),
+            label: 'दावे',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.policy),
-            label: 'योजना (Schemes)',
+            icon: Icon(Icons.account_balance_outlined),
+            activeIcon: Icon(Icons.account_balance),
+            label: 'योजनाएं',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.satellite_alt),
-            label: '🛰️ Satellite',
+            icon: Icon(Icons.satellite_outlined),
+            activeIcon: Icon(Icons.satellite),
+            label: 'उपग्रह',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'प्रोफाइल (Profile)',
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
+            label: 'प्रोफाइल',
           ),
         ],
       ),
@@ -182,28 +201,44 @@ class _DashboardScreenState extends State<DashboardScreen> {
           slivers: [
             // App Bar
             SliverAppBar(
-              expandedHeight: 200,
+              expandedHeight: 280,
               floating: false,
               pinned: true,
-              backgroundColor: Colors.green.shade700,
+              backgroundColor: const Color(0xFF138808),
               flexibleSpace: FlexibleSpaceBar(
                 titlePadding: const EdgeInsets.only(left: 16, bottom: 16),
-                title: Text(
-                  'Krishi Bandhu',
-                  style: GoogleFonts.poppins(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                    color: Colors.white,
-                  ),
+                title: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'PMFBY',
+                      style: GoogleFonts.notoSans(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                        color: Colors.white,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    Text(
+                      'प्रधानमंत्री फसल बीमा योजना',
+                      style: GoogleFonts.notoSansDevanagari(
+                        fontSize: 11,
+                        color: Colors.white.withOpacity(0.95),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
                 background: Container(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                       colors: [
-                        Colors.green.shade700,
-                        Colors.green.shade500,
+                        const Color(0xFFFF9933),
+                        const Color(0xFFFFFFFF),
+                        const Color(0xFF138808),
                       ],
                     ),
                   ),
