@@ -4,6 +4,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:intl/intl.dart';
 
 class WeatherScreen extends StatefulWidget {
@@ -15,41 +16,177 @@ class WeatherScreen extends StatefulWidget {
 
 class _WeatherScreenState extends State<WeatherScreen> {
   bool _isLoading = true;
+  bool _isLoadingLocation = true;
   Map<String, dynamic>? _weatherData;
   List<Map<String, dynamic>> _forecastData = [];
   Position? _currentPosition;
-  String _selectedCity = 'Delhi';
-
-  // Sample cities for demo - in production, use user's location
-  final List<String> _cities = [
-    'Delhi',
-    'Mumbai',
-    'Bangalore',
-    'Kolkata',
-    'Chennai',
-    'Hyderabad',
-    'Pune',
-    'Ahmedabad',
-    'Jaipur',
-    'Lucknow',
-  ];
+  String? _currentLocation;
+  String? _selectedLocation;
+  bool _useCurrentLocation = true;
+  final TextEditingController _locationController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
+    _getCurrentLocationAndWeather();
+  }
+
+  @override
+  void dispose() {
+    _locationController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _getCurrentLocationAndWeather() async {
+    setState(() {
+      _isLoadingLocation = true;
+      _isLoading = true;
+    });
+
+    try {
+      // Check location permissions
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        _setDefaultLocation();
+        return;
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          _setDefaultLocation();
+          return;
+        }
+      }
+
+      // Get current position
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      // Get address from coordinates
+      List<Placemark> placemarks = await placemarkFromCoordinates(
+        position.latitude,
+        position.longitude,
+      );
+
+      if (placemarks.isNotEmpty) {
+        Placemark place = placemarks[0];
+        String location = place.locality ?? place.subAdministrativeArea ?? place.administrativeArea ?? 'Unknown Location';
+        
+        setState(() {
+          _currentPosition = position;
+          _currentLocation = location;
+          _isLoadingLocation = false;
+        });
+      }
+
+      await _fetchWeatherData();
+    } catch (e) {
+      _setDefaultLocation();
+    }
+  }
+
+  void _setDefaultLocation() {
+    setState(() {
+      _currentLocation = 'Delhi';
+      _isLoadingLocation = false;
+    });
     _fetchWeatherData();
+  }
+
+  void _showLocationSearchDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.search, color: Colors.blue.shade700),
+            const SizedBox(width: 8),
+            const Text('Search Location'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _locationController,
+              decoration: InputDecoration(
+                hintText: 'Enter city or district name',
+                prefixIcon: const Icon(Icons.location_city),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onSubmitted: (value) {
+                if (value.isNotEmpty) {
+                  setState(() {
+                    _selectedLocation = value;
+                    _useCurrentLocation = false;
+                  });
+                  Navigator.pop(context);
+                  _fetchWeatherData();
+                }
+              },
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      setState(() {
+                        _useCurrentLocation = true;
+                        _selectedLocation = null;
+                      });
+                      Navigator.pop(context);
+                      _getCurrentLocationAndWeather();
+                    },
+                    icon: const Icon(Icons.my_location),
+                    label: const Text('Use Current'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue.shade700,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (_locationController.text.isNotEmpty) {
+                setState(() {
+                  _selectedLocation = _locationController.text;
+                  _useCurrentLocation = false;
+                });
+                Navigator.pop(context);
+                _fetchWeatherData();
+              }
+            },
+            child: const Text('Search'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _fetchWeatherData() async {
     setState(() => _isLoading = true);
     
     try {
-      // Using OpenWeatherMap API (free tier) for demonstration
-      // In production, replace with Indian government APIs when available
-      final apiKey = ''; // Add your API key
-      
-      // Demo data for now - replace with actual API calls
-      await Future.delayed(const Duration(seconds: 1));
+      // Using demo data - In production, integrate with:
+      // - OpenWeatherMap API
+      // - data.gov.in Agriculture APIs
+      // - IMD (India Meteorological Department) API
+      await Future.delayed(const Duration(milliseconds: 500));
       
       setState(() {
         _weatherData = _getDemoWeatherData();
@@ -112,35 +249,70 @@ class _WeatherScreenState extends State<WeatherScreen> {
           ? const Center(child: CircularProgressIndicator())
           : CustomScrollView(
               slivers: [
-                // Location Selector
+                // Location Header with Search
                 SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
+                  child: Container(
+                    margin: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.shade200,
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
                     child: Row(
                       children: [
-                        Icon(Icons.location_on, color: Colors.blue.shade700),
-                        const SizedBox(width: 8),
+                        Icon(
+                          _useCurrentLocation ? Icons.my_location : Icons.location_on,
+                          color: Colors.blue.shade700,
+                          size: 28,
+                        ),
+                        const SizedBox(width: 12),
                         Expanded(
-                          child: DropdownButton<String>(
-                            value: _selectedCity,
-                            isExpanded: true,
-                            items: _cities.map((city) {
-                              return DropdownMenuItem(
-                                value: city,
-                                child: Text(city),
-                              );
-                            }).toList(),
-                            onChanged: (value) {
-                              if (value != null) {
-                                setState(() => _selectedCity = value);
-                                _fetchWeatherData();
-                              }
-                            },
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _isLoadingLocation
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                    )
+                                  : Text(
+                                      _useCurrentLocation 
+                                          ? (_currentLocation ?? 'Unknown')
+                                          : (_selectedLocation ?? 'Delhi'),
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                              Text(
+                                _useCurrentLocation ? 'Live Location' : 'Selected Location',
+                                style: GoogleFonts.roboto(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                         IconButton(
+                          icon: const Icon(Icons.search),
+                          onPressed: _showLocationSearchDialog,
+                          tooltip: 'Search Location',
+                        ),
+                        IconButton(
                           icon: const Icon(Icons.refresh),
-                          onPressed: _fetchWeatherData,
+                          onPressed: _useCurrentLocation 
+                              ? _getCurrentLocationAndWeather 
+                              : _fetchWeatherData,
+                          tooltip: 'Refresh',
                         ),
                       ],
                     ),
@@ -179,6 +351,31 @@ class _WeatherScreenState extends State<WeatherScreen> {
                 // Agricultural Advisories
                 SliverToBoxAdapter(
                   child: _buildAgriculturalAdvisories(),
+                ),
+
+                // Soil Moisture Index
+                SliverToBoxAdapter(
+                  child: _buildSoilMoistureSection(),
+                ),
+
+                // Pest & Disease Alert
+                SliverToBoxAdapter(
+                  child: _buildPestDiseaseAlert(),
+                ),
+
+                // Irrigation Recommendation
+                SliverToBoxAdapter(
+                  child: _buildIrrigationRecommendation(),
+                ),
+
+                // Harvesting Calendar
+                SliverToBoxAdapter(
+                  child: _buildHarvestingCalendar(),
+                ),
+
+                // Weather-based Alerts for Officers
+                SliverToBoxAdapter(
+                  child: _buildOfficerAlerts(),
                 ),
 
                 const SliverToBoxAdapter(child: SizedBox(height: 24)),
@@ -866,6 +1063,525 @@ class _WeatherScreenState extends State<WeatherScreen> {
                         const SizedBox(height: 4),
                         Text(
                           advisory['message'] as String,
+                          style: GoogleFonts.roboto(
+                            fontSize: 13,
+                            color: Colors.grey.shade700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSoilMoistureSection() {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Soil Moisture Index',
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.brown.shade50, Colors.brown.shade100],
+              ),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.brown.shade300),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Current Moisture Level',
+                      style: GoogleFonts.roboto(
+                        fontSize: 14,
+                        color: Colors.grey.shade800,
+                      ),
+                    ),
+                    Text(
+                      '65%',
+                      style: GoogleFonts.poppins(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green.shade700,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                LinearProgressIndicator(
+                  value: 0.65,
+                  backgroundColor: Colors.grey.shade300,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.green.shade600),
+                  minHeight: 10,
+                  borderRadius: BorderRadius.circular(5),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildMoistureIndicator('Top Layer', '70%', Colors.green),
+                    _buildMoistureIndicator('Mid Layer', '65%', Colors.lightGreen),
+                    _buildMoistureIndicator('Deep', '55%', Colors.orange),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMoistureIndicator(String label, String value, Color color) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.2),
+            shape: BoxShape.circle,
+          ),
+          child: Text(
+            value,
+            style: GoogleFonts.poppins(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: GoogleFonts.roboto(
+            fontSize: 11,
+            color: Colors.grey.shade700,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPestDiseaseAlert() {
+    final alerts = [
+      {
+        'pest': 'Fall Armyworm',
+        'risk': 'High',
+        'crops': 'Maize, Rice',
+        'action': 'Apply biopesticides immediately',
+        'color': Colors.red,
+      },
+      {
+        'pest': 'Aphids',
+        'risk': 'Medium',
+        'crops': 'Cotton, Vegetables',
+        'action': 'Monitor daily, consider neem spray',
+        'color': Colors.orange,
+      },
+      {
+        'pest': 'Stem Borer',
+        'risk': 'Low',
+        'crops': 'Rice, Sugarcane',
+        'action': 'Regular field inspection',
+        'color': Colors.green,
+      },
+    ];
+
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Pest & Disease Alert',
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 12),
+          ...alerts.map((alert) {
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: (alert['color'] as Color).withOpacity(0.3),
+                  width: 2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.shade200,
+                    blurRadius: 5,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        alert['pest'] as String,
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: (alert['color'] as Color).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '${alert['risk']} Risk',
+                          style: GoogleFonts.roboto(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: alert['color'] as Color,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Affected Crops: ${alert['crops']}',
+                    style: GoogleFonts.roboto(
+                      fontSize: 13,
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Action: ${alert['action']}',
+                    style: GoogleFonts.roboto(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey.shade800,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildIrrigationRecommendation() {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Irrigation Recommendation',
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.cyan.shade50, Colors.cyan.shade100],
+              ),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.cyan.shade300),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.water_drop, color: Colors.blue.shade700, size: 32),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Moderate Irrigation Needed',
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue.shade800,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                _buildIrrigationItem('Next Irrigation', 'In 2 days', Icons.schedule),
+                _buildIrrigationItem('Water Requirement', '30-35 mm', Icons.opacity),
+                _buildIrrigationItem('Best Time', '5:00 AM - 7:00 AM', Icons.access_time),
+                _buildIrrigationItem('Expected Rainfall', '15 mm in 48 hrs', Icons.cloud),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildIrrigationItem(String label, String value, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: Colors.blue.shade700),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              label,
+              style: GoogleFonts.roboto(
+                fontSize: 14,
+                color: Colors.grey.shade700,
+              ),
+            ),
+          ),
+          Text(
+            value,
+            style: GoogleFonts.roboto(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey.shade800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHarvestingCalendar() {
+    final crops = [
+      {'crop': 'Wheat', 'stage': 'Flowering', 'daysToHarvest': 45, 'color': Colors.amber},
+      {'crop': 'Rice', 'stage': 'Maturity', 'daysToHarvest': 15, 'color': Colors.green},
+      {'crop': 'Cotton', 'stage': 'Boll Development', 'daysToHarvest': 60, 'color': Colors.purple},
+    ];
+
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Harvesting Calendar',
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 12),
+          ...crops.map((crop) {
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: (crop['color'] as Color).withOpacity(0.3)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.shade200,
+                    blurRadius: 5,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: (crop['color'] as Color).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.agriculture,
+                      color: crop['color'] as Color,
+                      size: 32,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          crop['crop'] as String,
+                          style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          'Stage: ${crop['stage']}',
+                          style: GoogleFonts.roboto(
+                            fontSize: 13,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        '${crop['daysToHarvest']}',
+                        style: GoogleFonts.poppins(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: crop['color'] as Color,
+                        ),
+                      ),
+                      Text(
+                        'days',
+                        style: GoogleFonts.roboto(
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOfficerAlerts() {
+    final alerts = [
+      {
+        'title': 'Field Inspection Required',
+        'description': '12 farms need immediate inspection due to weather damage',
+        'icon': Icons.warning_amber,
+        'color': Colors.orange,
+        'priority': 'High',
+      },
+      {
+        'title': 'Subsidy Disbursement',
+        'description': '45 farmers eligible for weather-based compensation',
+        'icon': Icons.account_balance_wallet,
+        'color': Colors.green,
+        'priority': 'Medium',
+      },
+      {
+        'title': 'Training Session',
+        'description': 'Conduct climate-resilient farming training next week',
+        'icon': Icons.school,
+        'color': Colors.blue,
+        'priority': 'Low',
+      },
+    ];
+
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Officer Action Items',
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 12),
+          ...alerts.map((alert) {
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    (alert['color'] as Color).withOpacity(0.05),
+                    Colors.white,
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: (alert['color'] as Color).withOpacity(0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: alert['color'] as Color,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      alert['icon'] as IconData,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                alert['title'] as String,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: (alert['color'] as Color).withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                alert['priority'] as String,
+                                style: GoogleFonts.roboto(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: alert['color'] as Color,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          alert['description'] as String,
                           style: GoogleFonts.roboto(
                             fontSize: 13,
                             color: Colors.grey.shade700,
