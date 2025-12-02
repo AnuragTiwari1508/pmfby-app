@@ -80,7 +80,7 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, child) {
         final List<Widget> screens = [
-          _buildOverviewScreen(),
+          _buildOverviewScreen(languageProvider),
           _buildClaimsManagementScreen(),
           _buildAnalyticsScreen(),
           _buildReportsScreen(),
@@ -125,7 +125,7 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
     );
   }
 
-  Widget _buildOverviewScreen() {
+  Widget _buildOverviewScreen(LanguageProvider languageProvider) {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(

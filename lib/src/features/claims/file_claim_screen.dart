@@ -137,10 +137,10 @@ class _FileClaimScreenState extends State<FileClaimScreen> {
             foregroundColor: Colors.white,
           ),
           body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
+            padding: const EdgeInsets.all(16.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Header Info
@@ -413,12 +413,11 @@ class _FileClaimScreenState extends State<FileClaimScreen> {
                 ),
               ),
             ],
-          ],
+          ),
         ),
       ),
     );
       },
     );
-  }
   }
 }
