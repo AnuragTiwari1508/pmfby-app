@@ -167,7 +167,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               _buildChipRow(Icons.eco, 'Crops', user.cropTypes!),
                           ],
                         ),
-                      ] else ..[
+                      ] else ...[
                         _buildInfoCard(
                           title: AppStrings.get('profile', 'official_details', lang),
                           icon: Icons.work,

@@ -133,10 +133,10 @@ class _FileClaimScreenState extends State<FileClaimScreen> {
               AppStrings.get('claims', 'file_new_claim', lang),
               style: GoogleFonts.poppins(),
             ),
-        backgroundColor: Colors.green.shade700,
-        foregroundColor: Colors.white,
-      ),
-      body: SingleChildScrollView(
+            backgroundColor: Colors.green.shade700,
+            foregroundColor: Colors.white,
+          ),
+          body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
@@ -419,5 +419,6 @@ class _FileClaimScreenState extends State<FileClaimScreen> {
     );
       },
     );
+  }
   }
 }

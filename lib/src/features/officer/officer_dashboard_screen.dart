@@ -495,9 +495,9 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
             AppStrings.get('officer', 'claims_management', languageProvider.currentLanguage),
             style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
           ),
-        backgroundColor: Colors.indigo.shade700,
-        foregroundColor: Colors.white,
-        actions: [
+          backgroundColor: Colors.indigo.shade700,
+          foregroundColor: Colors.white,
+          actions: [
           IconButton(
             icon: const Icon(Icons.filter_list),
             onPressed: _showFilterDialog,
@@ -681,10 +681,10 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
             AppStrings.get('officer', 'reports_export', languageProvider.currentLanguage),
             style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
           ),
-        backgroundColor: Colors.indigo.shade700,
-        foregroundColor: Colors.white,
-      ),
-      body: ListView(
+          backgroundColor: Colors.indigo.shade700,
+          foregroundColor: Colors.white,
+        ),
+        body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           _buildReportCard(
