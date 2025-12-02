@@ -26,16 +26,24 @@ class _LanguageSettingsScreenState extends State<LanguageSettingsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'भाषा बदलें',
-          style: GoogleFonts.notoSansDevanagari(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        subtitle: Text(
-          'Change Language',
-          style: GoogleFonts.roboto(fontSize: 12),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'भाषा बदलें',
+              style: GoogleFonts.notoSansDevanagari(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(
+              'Change Language',
+              style: GoogleFonts.roboto(
+                fontSize: 12,
+                color: Colors.white.withOpacity(0.8),
+              ),
+            ),
+          ],
         ),
         backgroundColor: const Color(0xFF1B5E20),
         foregroundColor: Colors.white,
