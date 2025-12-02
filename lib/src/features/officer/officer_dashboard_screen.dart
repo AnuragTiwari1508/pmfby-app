@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import '../satellite/enhanced_satellite_screen.dart';
 import '../settings/language_settings_screen.dart';
 import '../../providers/language_provider.dart';
+import '../../localization/app_localizations.dart';
 
 enum OfficerLevel {
   national,
@@ -91,6 +92,7 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.indigo.shade700,
         unselectedItemColor: Colors.grey,
+        showUnselectedLabels: true,
         onTap: (index) => setState(() => _selectedIndex = index),
         items: const [
           BottomNavigationBarItem(
@@ -140,6 +142,50 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
               floating: false,
               pinned: true,
               backgroundColor: Colors.indigo.shade700,
+              actions: [
+                Padding(
+                  padding: const EdgeInsets.only(right: 16),
+                  child: Consumer<LanguageProvider>(
+                    builder: (context, languageProvider, child) {
+                      return PopupMenuButton<String>(
+                        icon: const Icon(Icons.language, color: Colors.white),
+                        onSelected: (String languageCode) async {
+                          await languageProvider.setLanguage(languageCode);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Language changed to ${languageProvider.getLanguageName(languageCode)}',
+                                  style: GoogleFonts.roboto(),
+                                ),
+                                duration: const Duration(seconds: 2),
+                                backgroundColor: Colors.green.shade700,
+                              ),
+                            );
+                          }
+                        },
+                        itemBuilder: (BuildContext context) {
+                          return AppLanguages.supportedLanguages.map((lang) {
+                            return PopupMenuItem<String>(
+                              value: lang.code,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (languageProvider.currentLanguage == lang.code)
+                                    const Icon(Icons.check, size: 16, color: Colors.green),
+                                  if (languageProvider.currentLanguage == lang.code)
+                                    const SizedBox(width: 8),
+                                  Text(lang.nativeName),
+                                ],
+                              ),
+                            );
+                          }).toList();
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
               flexibleSpace: FlexibleSpaceBar(
                 titlePadding: const EdgeInsets.only(left: 16, bottom: 16),
                 title: Column(
