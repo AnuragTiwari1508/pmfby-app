@@ -12,6 +12,10 @@ import '../../claims/claims_list_screen.dart';
 import '../../schemes/schemes_screen.dart';
 import '../../profile/presentation/profile_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../satellite/enhanced_satellite_screen.dart';
+import '../../settings/language_settings_screen.dart';
+import '../../../providers/language_provider.dart';
+import '../../../localization/app_localizations.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -97,18 +101,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final List<Widget> screens = [
-      _buildHomeScreen(),
-      const ClaimsListScreen(),
-      const SchemesScreen(),
-      const ProfileScreen(),
-    ];
+    return Consumer<LanguageProvider>(
+      builder: (context, languageProvider, child) {
+        final List<Widget> screens = [
+          _buildHomeScreen(),
+          const ClaimsListScreen(),
+          const SchemesScreen(),
+          const ProfileScreen(),
+        ];
 
-    return Scaffold(
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : screens[_selectedIndex],
-      floatingActionButton: _selectedIndex == 0
+        return Scaffold(
+          body: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : screens[_selectedIndex],
+          floatingActionButton: _selectedIndex == 0
           ? Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -131,46 +137,58 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ],
             )
           : null,
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.green.shade700,
-        unselectedItemColor: Colors.grey,
-        onTap: (index) => setState(() => _selectedIndex = index),
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'होम (Home)',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.description),
-            label: 'दावे (Claims)',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.policy),
-            label: 'योजना (Schemes)',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'प्रोफाइल (Profile)',
-          ),
-        ],
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          currentIndex: _selectedIndex,
+          selectedItemColor: const Color(0xFF1B5E20),
+          unselectedItemColor: const Color(0xFF616161),
+          selectedFontSize: 12,
+          unselectedFontSize: 11,
+          elevation: 0,
+          backgroundColor: Colors.white,
+          onTap: (index) => setState(() => _selectedIndex = index),
+          items: [
+            BottomNavigationBarItem(
+              icon: const Icon(Icons.home_outlined),
+              activeIcon: const Icon(Icons.home),
+              label: AppStrings.get('navigation', 'home', context.read<LanguageProvider>().currentLanguage),
+            ),
+            BottomNavigationBarItem(
+              icon: const Icon(Icons.receipt_long_outlined),
+              activeIcon: const Icon(Icons.receipt_long),
+              label: AppStrings.get('navigation', 'claims', context.read<LanguageProvider>().currentLanguage),
+            ),
+            BottomNavigationBarItem(
+              icon: const Icon(Icons.account_balance_outlined),
+              activeIcon: const Icon(Icons.account_balance),
+              label: AppStrings.get('navigation', 'schemes', context.read<LanguageProvider>().currentLanguage),
+            ),
+            BottomNavigationBarItem(
+              icon: const Icon(Icons.person_outline),
+              activeIcon: const Icon(Icons.person),
+              label: AppStrings.get('navigation', 'profile', context.read<LanguageProvider>().currentLanguage),
+            ),
+          ],
+        ),
       ),
+        );
+      },
     );
   }
 
   Widget _buildHomeScreen() {
     return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Colors.green.shade50,
-            Colors.white,
-          ],
-        ),
-      ),
+      color: const Color(0xFFFAFAFA),
       child: SafeArea(
         child: CustomScrollView(
           slivers: [
@@ -179,16 +197,75 @@ class _DashboardScreenState extends State<DashboardScreen> {
               expandedHeight: 200,
               floating: false,
               pinned: true,
-              backgroundColor: Colors.green.shade700,
+              backgroundColor: const Color(0xFF1B5E20),
+              actions: [
+                Padding(
+                  padding: const EdgeInsets.only(right: 12),
+                  child: Consumer<LanguageProvider>(
+                    builder: (context, languageProvider, child) {
+                      return PopupMenuButton<String>(
+                        icon: const Icon(Icons.language, color: Colors.white),
+                        onSelected: (String languageCode) async {
+                          await languageProvider.setLanguage(languageCode);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Language changed to ${languageProvider.getLanguageName(languageCode)}',
+                                  style: GoogleFonts.roboto(),
+                                ),
+                                duration: const Duration(seconds: 2),
+                                backgroundColor: Colors.green.shade700,
+                              ),
+                            );
+                          }
+                        },
+                        itemBuilder: (BuildContext context) {
+                          return AppLanguages.supportedLanguages.map((lang) {
+                            return PopupMenuItem<String>(
+                              value: lang.code,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (languageProvider.currentLanguage == lang.code)
+                                    const Icon(Icons.check, size: 16, color: Colors.green),
+                                  if (languageProvider.currentLanguage == lang.code)
+                                    const SizedBox(width: 8),
+                                  Text(lang.nativeName),
+                                ],
+                              ),
+                            );
+                          }).toList();
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
               flexibleSpace: FlexibleSpaceBar(
                 titlePadding: const EdgeInsets.only(left: 16, bottom: 16),
-                title: Text(
-                  'Krishi Bandhu',
-                  style: GoogleFonts.poppins(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                    color: Colors.white,
-                  ),
+                title: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'PMFBY',
+                      style: GoogleFonts.notoSans(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                        color: Colors.white,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    Text(
+                      'प्रधानमंत्री फसल बीमा योजना',
+                      style: GoogleFonts.notoSansDevanagari(
+                        fontSize: 11,
+                        color: Colors.white.withOpacity(0.95),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
                 background: Container(
                   decoration: BoxDecoration(
@@ -196,43 +273,82 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        Colors.green.shade700,
-                        Colors.green.shade500,
+                        const Color(0xFF1B5E20),
+                        const Color(0xFF2E7D32),
                       ],
                     ),
                   ),
                   child: Stack(
                     children: [
                       Positioned(
-                        right: -50,
-                        top: -50,
-                        child: Icon(
-                          Icons.agriculture,
-                          size: 200,
-                          color: Colors.white.withOpacity(0.1),
+                        right: -30,
+                        top: -30,
+                        child: Container(
+                          width: 150,
+                          height: 150,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white.withOpacity(0.05),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        left: -50,
+                        bottom: -50,
+                        child: Container(
+                          width: 180,
+                          height: 180,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white.withOpacity(0.05),
+                          ),
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.only(left: 16, top: 80, right: 16, bottom: 60),
+                        padding: const EdgeInsets.only(left: 20, top: 70, right: 20, bottom: 50),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(
-                              'नमस्ते, ${_userProfile?.name ?? "किसान"} 🙏',
-                              style: GoogleFonts.notoSans(
-                                fontSize: 22,
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              'आज का मौसम: धूप ☀️',
-                              style: GoogleFonts.notoSans(
-                                fontSize: 15,
-                                color: Colors.white.withOpacity(0.95),
-                              ),
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Icon(
+                                    Icons.verified_user,
+                                    color: Colors.white,
+                                    size: 28,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'नमस्ते',
+                                        style: GoogleFonts.notoSansDevanagari(
+                                          fontSize: 16,
+                                          color: Colors.white.withOpacity(0.9),
+                                          fontWeight: FontWeight.w400,
+                                        ),
+                                      ),
+                                      Text(
+                                        _userProfile?.name ?? "किसान भाई",
+                                        style: GoogleFonts.notoSans(
+                                          fontSize: 20,
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -412,6 +528,87 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ],
                         ),
                       ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            // PMFBY Info Banner
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
+                child: InkWell(
+                  onTap: () => context.push('/pmfby-info'),
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF1565C0), Color(0xFF0D47A1)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF1565C0).withOpacity(0.3),
+                          blurRadius: 12,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.account_balance,
+                            color: Colors.white,
+                            size: 32,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'योजना की जानकारी',
+                                style: GoogleFonts.notoSansDevanagari(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'प्रीमियम दरें • हेल्पलाइन • सहायता',
+                                style: GoogleFonts.notoSansDevanagari(
+                                  color: Colors.white.withOpacity(0.9),
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            Icons.arrow_forward_ios,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),

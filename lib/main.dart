@@ -30,18 +30,29 @@ import 'src/features/crop_loss/presentation/crop_loss_intimation_screen.dart';
 import 'src/features/crop_loss/presentation/file_crop_loss_screen.dart';
 import 'src/features/multi_image/multi_image_capture_screen.dart';
 import 'src/features/multi_image/batch_upload_progress_screen.dart';
+import 'src/features/satellite/satellite_monitoring_screen.dart';
+import 'src/features/satellite/enhanced_satellite_screen.dart';
+import 'src/features/pmfby_info/pmfby_info_screen.dart';
+import 'src/features/batch_upload/enhanced_batch_upload_screen.dart';
+import 'src/features/settings/language_settings_screen.dart';
+import 'src/theme/app_themes.dart';
+import 'src/localization/app_localizations.dart';
 
 import 'src/services/firebase_auth_service.dart';
 import 'src/services/image_upload_service.dart';
 import 'src/services/connectivity_service.dart';
 import 'src/services/auto_sync_service.dart';
+import 'src/providers/language_provider.dart';
 import 'src/features/splash/splash_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => ThemeProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => LanguageProvider()),
+      ],
       child: const KrashiBandhuApp(),
     ),
   );
@@ -140,6 +151,7 @@ GoRouter _buildRouter(BuildContext context) {
       // LOGIN + REGISTER
       GoRoute(
         path: '/login',
+        name: 'login',
         builder: (_, __) => const LoginScreen(),
       ),
       GoRoute(
@@ -240,6 +252,30 @@ GoRouter _buildRouter(BuildContext context) {
       GoRoute(
         path: '/profile',
         builder: (_, __) => const ProfileScreen(),
+      ),
+
+      // SATELLITE MONITORING
+      GoRoute(
+        path: '/satellite',
+        builder: (_, __) => const EnhancedSatelliteScreen(),
+      ),
+
+      // PMFBY INFO
+      GoRoute(
+        path: '/pmfby-info',
+        builder: (_, __) => const PMFBYInfoScreen(),
+      ),
+
+      // BATCH UPLOAD
+      GoRoute(
+        path: '/batch-upload',
+        builder: (_, __) => const EnhancedBatchUploadScreen(),
+      ),
+
+      // LANGUAGE SETTINGS
+      GoRoute(
+        path: '/language-settings',
+        builder: (_, __) => const LanguageSettingsScreen(),
       ),
 
       // COMPLAINTS
@@ -369,7 +405,7 @@ class _KrashiBandhuAppState extends State<KrashiBandhuApp> {
     final themeProvider = context.watch<ThemeProvider>();
     
     return MaterialApp(
-      title: 'Krishi Bandhu',
+      title: 'Krishi Bandhu - PMFBY',
       theme: lightTheme,
       darkTheme: darkTheme,
       themeMode: themeProvider.themeMode,
@@ -399,8 +435,9 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       routerConfig: _buildRouter(context),
-      title: 'Krishi Bandhu',
+      title: 'PMFBY - Pradhan Mantri Fasal Bima Yojana',
       debugShowCheckedModeBanner: false,
+      theme: PMFBYTheme.lightTheme,
     );
   }
 }

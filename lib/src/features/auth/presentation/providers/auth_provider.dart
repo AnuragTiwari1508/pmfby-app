@@ -40,10 +40,18 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<void> logout() async {
-    await _authService.logout();
-    _currentUser = null;
-    _isLoggedIn = false;
-    notifyListeners();
+    try {
+      await _authService.logout();
+      _currentUser = null;
+      _isLoggedIn = false;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Logout error: $e');
+      // Still clear local state even if service fails
+      _currentUser = null;
+      _isLoggedIn = false;
+      notifyListeners();
+    }
   }
 
   Future<bool> updateProfile(User updatedUser) async {

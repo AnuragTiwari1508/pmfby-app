@@ -2,9 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import '../../../services/firebase_auth_service.dart';
-import '../../../models/user_profile.dart';
+import '../../services/firebase_auth_service.dart';
+import '../../models/user_profile.dart';
 import 'package:intl/intl.dart';
+import '../satellite/enhanced_satellite_screen.dart';
+import '../settings/language_settings_screen.dart';
+import '../../providers/language_provider.dart';
+import '../../localization/app_localizations.dart';
 
 enum OfficerLevel {
   national,
@@ -73,40 +77,51 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final List<Widget> screens = [
-      _buildOverviewScreen(),
-      _buildClaimsManagementScreen(),
-      _buildAnalyticsScreen(),
-      _buildReportsScreen(),
-    ];
+    return Consumer<LanguageProvider>(
+      builder: (context, languageProvider, child) {
+        final List<Widget> screens = [
+          _buildOverviewScreen(),
+          _buildClaimsManagementScreen(),
+          _buildAnalyticsScreen(),
+          _buildReportsScreen(),
+          const EnhancedSatelliteScreen(),
+        ];
 
-    return Scaffold(
-      body: screens[_selectedIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.indigo.shade700,
-        unselectedItemColor: Colors.grey,
-        onTap: (index) => setState(() => _selectedIndex = index),
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard),
-            label: 'Overview',
+        return Scaffold(
+          body: screens[_selectedIndex],
+          bottomNavigationBar: BottomNavigationBar(
+            type: BottomNavigationBarType.fixed,
+            currentIndex: _selectedIndex,
+            selectedItemColor: Colors.indigo.shade700,
+            unselectedItemColor: Colors.grey,
+            showUnselectedLabels: true,
+            onTap: (index) => setState(() => _selectedIndex = index),
+            items: [
+              BottomNavigationBarItem(
+                icon: const Icon(Icons.dashboard),
+                label: AppStrings.get('navigation', 'overview', languageProvider.currentLanguage),
+              ),
+              BottomNavigationBarItem(
+                icon: const Icon(Icons.assignment),
+                label: AppStrings.get('navigation', 'claims', languageProvider.currentLanguage),
+              ),
+              BottomNavigationBarItem(
+                icon: const Icon(Icons.analytics),
+                label: AppStrings.get('navigation', 'analytics', languageProvider.currentLanguage),
+              ),
+              BottomNavigationBarItem(
+                icon: const Icon(Icons.assessment),
+                label: AppStrings.get('navigation', 'reports', languageProvider.currentLanguage),
+              ),
+              BottomNavigationBarItem(
+                icon: const Icon(Icons.satellite_outlined),
+                activeIcon: const Icon(Icons.satellite),
+                label: AppStrings.get('navigation', 'satellite', languageProvider.currentLanguage),
+              ),
+            ],
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.assignment),
-            label: 'Claims',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.analytics),
-            label: 'Analytics',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.assessment),
-            label: 'Reports',
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -131,6 +146,50 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
               floating: false,
               pinned: true,
               backgroundColor: Colors.indigo.shade700,
+              actions: [
+                Padding(
+                  padding: const EdgeInsets.only(right: 16),
+                  child: Consumer<LanguageProvider>(
+                    builder: (context, languageProvider, child) {
+                      return PopupMenuButton<String>(
+                        icon: const Icon(Icons.language, color: Colors.white),
+                        onSelected: (String languageCode) async {
+                          await languageProvider.setLanguage(languageCode);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Language changed to ${languageProvider.getLanguageName(languageCode)}',
+                                  style: GoogleFonts.roboto(),
+                                ),
+                                duration: const Duration(seconds: 2),
+                                backgroundColor: Colors.green.shade700,
+                              ),
+                            );
+                          }
+                        },
+                        itemBuilder: (BuildContext context) {
+                          return AppLanguages.supportedLanguages.map((lang) {
+                            return PopupMenuItem<String>(
+                              value: lang.code,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (languageProvider.currentLanguage == lang.code)
+                                    const Icon(Icons.check, size: 16, color: Colors.green),
+                                  if (languageProvider.currentLanguage == lang.code)
+                                    const SizedBox(width: 8),
+                                  Text(lang.nativeName),
+                                ],
+                              ),
+                            );
+                          }).toList();
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
               flexibleSpace: FlexibleSpaceBar(
                 titlePadding: const EdgeInsets.only(left: 16, bottom: 16),
                 title: Column(
@@ -207,16 +266,6 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
                   ),
                 ),
               ),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.notifications),
-                  onPressed: () {},
-                ),
-                IconButton(
-                  icon: const Icon(Icons.settings),
-                  onPressed: () {},
-                ),
-              ],
             ),
 
             // Quick Stats Grid
@@ -395,6 +444,34 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
                             'Field Inspection',
                             Icons.location_searching,
                             Colors.orange,
+                            () {},
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildActionButton(
+                            'Change Language',
+                            Icons.language,
+                            Colors.indigo,
+                            () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => const LanguageSettingsScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _buildActionButton(
+                            'Settings',
+                            Icons.settings,
+                            Colors.teal,
                             () {},
                           ),
                         ),

@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../auth/presentation/providers/auth_provider.dart';
+import '../../settings/language_settings_screen.dart';
+import '../../../providers/language_provider.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -218,6 +220,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             },
                           ),
                           _buildActionTile(
+                            icon: Icons.language,
+                            title: 'Change Language',
+                            subtitle: 'Select your preferred language',
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => const LanguageSettingsScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                          _buildActionTile(
                             icon: Icons.help_outline,
                             title: 'Help & Support',
                             subtitle: 'Get help and contact support',
@@ -243,7 +257,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       // Version Info
                       Center(
                         child: Text(
-                          'Krishi Bandhu v1.0.0',
+                          'Krishi Bandhu - PMFBY v2.0.0',
                           style: GoogleFonts.poppins(
                             fontSize: 12,
                             color: Colors.grey.shade600,
@@ -596,7 +610,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Navigator.pop(context);
               await context.read<AuthProvider>().logout();
               if (context.mounted) {
-                context.go('/login');
+                context.goNamed('login');
               }
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
