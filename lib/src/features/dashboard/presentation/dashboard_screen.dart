@@ -811,10 +811,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.notoSans(
-                  fontSize: 12,
+                style: GoogleFonts.notoSansDevanagari(
+                  fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: Colors.black87,
+                  letterSpacing: 0.3,
+                  height: 1.3,
                 ),
               ),
               const SizedBox(height: 2),
@@ -909,10 +911,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.notoSans(
-                  fontSize: 12,
+                style: GoogleFonts.notoSansDevanagari(
+                  fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: Colors.black87,
+                  letterSpacing: 0.3,
+                  height: 1.3,
                 ),
               ),
               const SizedBox(height: 2),
