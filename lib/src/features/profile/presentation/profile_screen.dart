@@ -600,7 +600,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _showLogoutDialog(String lang) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: Text(
           AppStrings.get('profile', 'logout', lang),
           style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
@@ -608,14 +608,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
         content: Text(AppStrings.get('profile', 'are_you_sure_logout', lang)),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: Text(AppStrings.get('profile', 'cancel', lang)),
           ),
           TextButton(
             onPressed: () async {
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
               await context.read<AuthProvider>().logout();
-              if (context.mounted) {
+              if (mounted) {
                 context.go('/login');
               }
             },

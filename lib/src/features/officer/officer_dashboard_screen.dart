@@ -75,6 +75,35 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
     },
   ];
 
+  Future<bool> _showExitConfirmationDialog() async {
+    final lang = context.read<LanguageProvider>().currentLanguage;
+    return await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          lang == 'hi' ? 'ऐप बंद करें?' : 'Exit App?',
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          lang == 'hi' 
+              ? 'क्या आप वाकई ऐप से बाहर निकलना चाहते हैं?' 
+              : 'Are you sure you want to exit the app?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(lang == 'hi' ? 'नहीं' : 'No'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: Text(lang == 'hi' ? 'हाँ, बाहर निकलें' : 'Yes, Exit'),
+          ),
+        ],
+      ),
+    ) ?? false;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<LanguageProvider>(
@@ -87,38 +116,48 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
           const EnhancedSatelliteScreen(),
         ];
 
-        return Scaffold(
-          body: screens[_selectedIndex],
-          bottomNavigationBar: BottomNavigationBar(
-            type: BottomNavigationBarType.fixed,
-            currentIndex: _selectedIndex,
-            selectedItemColor: Colors.indigo.shade700,
-            unselectedItemColor: Colors.grey,
-            showUnselectedLabels: true,
-            onTap: (index) => setState(() => _selectedIndex = index),
-            items: [
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.dashboard),
-                label: AppStrings.get('navigation', 'overview', languageProvider.currentLanguage),
-              ),
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.assignment),
-                label: AppStrings.get('navigation', 'claims', languageProvider.currentLanguage),
-              ),
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.analytics),
-                label: AppStrings.get('navigation', 'analytics', languageProvider.currentLanguage),
-              ),
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.assessment),
-                label: AppStrings.get('navigation', 'reports', languageProvider.currentLanguage),
-              ),
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.satellite_outlined),
-                activeIcon: const Icon(Icons.satellite),
-                label: AppStrings.get('navigation', 'satellite', languageProvider.currentLanguage),
-              ),
-            ],
+        return PopScope(
+          canPop: false,
+          onPopInvokedWithResult: (didPop, result) async {
+            if (didPop) return;
+            final shouldExit = await _showExitConfirmationDialog();
+            if (shouldExit && mounted) {
+              Navigator.of(context).pop();
+            }
+          },
+          child: Scaffold(
+            body: screens[_selectedIndex],
+            bottomNavigationBar: BottomNavigationBar(
+              type: BottomNavigationBarType.fixed,
+              currentIndex: _selectedIndex,
+              selectedItemColor: Colors.indigo.shade700,
+              unselectedItemColor: Colors.grey,
+              showUnselectedLabels: true,
+              onTap: (index) => setState(() => _selectedIndex = index),
+              items: [
+                BottomNavigationBarItem(
+                  icon: const Icon(Icons.dashboard),
+                  label: AppStrings.get('navigation', 'overview', languageProvider.currentLanguage),
+                ),
+                BottomNavigationBarItem(
+                  icon: const Icon(Icons.assignment),
+                  label: AppStrings.get('navigation', 'claims', languageProvider.currentLanguage),
+                ),
+                BottomNavigationBarItem(
+                  icon: const Icon(Icons.analytics),
+                  label: AppStrings.get('navigation', 'analytics', languageProvider.currentLanguage),
+                ),
+                BottomNavigationBarItem(
+                  icon: const Icon(Icons.assessment),
+                  label: AppStrings.get('navigation', 'reports', languageProvider.currentLanguage),
+                ),
+                BottomNavigationBarItem(
+                  icon: const Icon(Icons.satellite_outlined),
+                  activeIcon: const Icon(Icons.satellite),
+                  label: AppStrings.get('navigation', 'satellite', languageProvider.currentLanguage),
+                ),
+              ],
+            ),
           ),
         );
       },

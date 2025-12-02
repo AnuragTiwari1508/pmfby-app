@@ -99,6 +99,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  Future<bool> _showExitConfirmationDialog() async {
+    final lang = context.read<LanguageProvider>().currentLanguage;
+    return await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          lang == 'hi' ? 'ऐप बंद करें?' : 'Exit App?',
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          lang == 'hi' 
+              ? 'क्या आप वाकई ऐप से बाहर निकलना चाहते हैं?' 
+              : 'Are you sure you want to exit the app?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(lang == 'hi' ? 'नहीं' : 'No'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: Text(lang == 'hi' ? 'हाँ, बाहर निकलें' : 'Yes, Exit'),
+          ),
+        ],
+      ),
+    ) ?? false;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<LanguageProvider>(
@@ -110,39 +139,48 @@ class _DashboardScreenState extends State<DashboardScreen> {
           const ProfileScreen(),
         ];
 
-        return Scaffold(
-          body: _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : screens[_selectedIndex],
-          floatingActionButton: _selectedIndex == 0
-          ? Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Customer Support FAB
-                FloatingActionButton(
-                  heroTag: 'support',
-                  onPressed: _showHelpDialog,
-                  backgroundColor: Colors.blue.shade700,
-                  child: const Icon(Icons.support_agent, size: 28),
-                ),
-                const SizedBox(height: 12),
-                // Camera FAB
-                FloatingActionButton.extended(
-                  heroTag: 'camera',
-                  onPressed: () => context.push('/camera'),
-                  label: const Text('Capture Image'),
-                  icon: const Icon(Icons.camera_alt_rounded),
-                  backgroundColor: Colors.green.shade700,
-                ),
-              ],
-            )
-          : null,
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 8,
+        return PopScope(
+          canPop: false,
+          onPopInvokedWithResult: (didPop, result) async {
+            if (didPop) return;
+            final shouldExit = await _showExitConfirmationDialog();
+            if (shouldExit && mounted) {
+              Navigator.of(context).pop();
+            }
+          },
+          child: Scaffold(
+            body: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : screens[_selectedIndex],
+            floatingActionButton: _selectedIndex == 0
+            ? Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Customer Support FAB
+                  FloatingActionButton(
+                    heroTag: 'support',
+                    onPressed: _showHelpDialog,
+                    backgroundColor: Colors.blue.shade700,
+                    child: const Icon(Icons.support_agent, size: 28),
+                  ),
+                  const SizedBox(height: 12),
+                  // Camera FAB
+                  FloatingActionButton.extended(
+                    heroTag: 'camera',
+                    onPressed: () => context.push('/camera'),
+                    label: const Text('Capture Image'),
+                    icon: const Icon(Icons.camera_alt_rounded),
+                    backgroundColor: Colors.green.shade700,
+                  ),
+                ],
+              )
+            : null,
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 8,
               offset: const Offset(0, -2),
             ),
           ],
@@ -181,6 +219,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
         ),
       ),
+        ),
         );
       },
     );
@@ -623,7 +662,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   crossAxisCount: 2,
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
-                  childAspectRatio: 1.1,
+                  childAspectRatio: 1.0,
                 ),
                 delegate: SliverChildListDelegate([
                   _buildActionCard(
