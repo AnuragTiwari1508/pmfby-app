@@ -34,6 +34,7 @@ import 'src/features/satellite/satellite_monitoring_screen.dart';
 import 'src/features/satellite/enhanced_satellite_screen.dart';
 import 'src/features/pmfby_info/pmfby_info_screen.dart';
 import 'src/features/batch_upload/enhanced_batch_upload_screen.dart';
+import 'src/features/settings/language_settings_screen.dart';
 import 'src/theme/app_themes.dart';
 import 'src/localization/app_localizations.dart';
 
@@ -41,13 +42,17 @@ import 'src/services/firebase_auth_service.dart';
 import 'src/services/image_upload_service.dart';
 import 'src/services/connectivity_service.dart';
 import 'src/services/auto_sync_service.dart';
+import 'src/providers/language_provider.dart';
 import 'src/features/splash/splash_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => ThemeProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => LanguageProvider()),
+      ],
       child: const KrashiBandhuApp(),
     ),
   );
@@ -264,6 +269,12 @@ GoRouter _buildRouter(BuildContext context) {
       GoRoute(
         path: '/batch-upload',
         builder: (_, __) => const EnhancedBatchUploadScreen(),
+      ),
+
+      // LANGUAGE SETTINGS
+      GoRoute(
+        path: '/language-settings',
+        builder: (_, __) => const LanguageSettingsScreen(),
       ),
 
       // COMPLAINTS

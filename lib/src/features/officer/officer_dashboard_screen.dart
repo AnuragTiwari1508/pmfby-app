@@ -5,6 +5,9 @@ import 'package:provider/provider.dart';
 import '../../services/firebase_auth_service.dart';
 import '../../models/user_profile.dart';
 import 'package:intl/intl.dart';
+import '../satellite/enhanced_satellite_screen.dart';
+import '../settings/language_settings_screen.dart';
+import '../../providers/language_provider.dart';
 
 enum OfficerLevel {
   national,
@@ -78,6 +81,7 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
       _buildClaimsManagementScreen(),
       _buildAnalyticsScreen(),
       _buildReportsScreen(),
+      const EnhancedSatelliteScreen(),
     ];
 
     return Scaffold(
@@ -104,6 +108,11 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.assessment),
             label: 'Reports',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.satellite_outlined),
+            activeIcon: Icon(Icons.satellite),
+            label: 'Satellite',
           ),
         ],
       ),
@@ -395,6 +404,34 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
                             'Field Inspection',
                             Icons.location_searching,
                             Colors.orange,
+                            () {},
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildActionButton(
+                            'Change Language',
+                            Icons.language,
+                            Colors.indigo,
+                            () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => const LanguageSettingsScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _buildActionButton(
+                            'Settings',
+                            Icons.settings,
+                            Colors.teal,
                             () {},
                           ),
                         ),

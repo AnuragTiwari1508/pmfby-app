@@ -13,6 +13,8 @@ import '../../schemes/schemes_screen.dart';
 import '../../profile/presentation/profile_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../satellite/enhanced_satellite_screen.dart';
+import '../../settings/language_settings_screen.dart';
+import '../../../providers/language_provider.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -102,7 +104,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _buildHomeScreen(),
       const ClaimsListScreen(),
       const SchemesScreen(),
-      const EnhancedSatelliteScreen(),
       const ProfileScreen(),
     ];
 
@@ -114,6 +115,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ? Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                // Language Settings FAB
+                FloatingActionButton(
+                  heroTag: 'language',
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const LanguageSettingsScreen(),
+                      ),
+                    );
+                  },
+                  backgroundColor: Colors.indigo.shade700,
+                  child: const Icon(Icons.language, size: 24),
+                ),
+                const SizedBox(height: 12),
                 // Customer Support FAB
                 FloatingActionButton(
                   heroTag: 'support',
@@ -168,11 +183,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             icon: Icon(Icons.account_balance_outlined),
             activeIcon: Icon(Icons.account_balance),
             label: 'योजनाएं',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.satellite_outlined),
-            activeIcon: Icon(Icons.satellite),
-            label: 'उपग्रह',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),

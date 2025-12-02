@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../auth/presentation/providers/auth_provider.dart';
+import '../../settings/language_settings_screen.dart';
+import '../../../providers/language_provider.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -214,6 +216,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             onTap: () {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(content: Text('Notification settings coming soon!')),
+                              );
+                            },
+                          ),
+                          _buildActionTile(
+                            icon: Icons.language,
+                            title: 'Change Language',
+                            subtitle: 'Select your preferred language',
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => const LanguageSettingsScreen(),
+                                ),
                               );
                             },
                           ),
