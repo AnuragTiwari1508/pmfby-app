@@ -19,7 +19,39 @@ class _EnhancedSatelliteScreenState extends State<EnhancedSatelliteScreen> with 
   bool _showDistricts = true;
   bool _showNDVI = false;
   String _selectedLayer = 'satellite';
+  String _selectedDataLayer = 'none'; // none, soil_moisture, ndvi, soil_texture
   Map<String, dynamic>? _selectedFeature;
+  
+  // Satellite data layer info
+  final Map<String, Map<String, dynamic>> dataLayerInfo = {
+    'soil_moisture': {
+      'name': 'मृदा नमी',
+      'nameEn': 'Soil Moisture',
+      'icon': Icons.water_drop,
+      'color': Color(0xFF0277BD),
+      'description': 'NASA SMAP उपग्रह से मृदा नमी डेटा',
+      'unit': '%',
+      'source': 'NASA SMAP Satellite',
+    },
+    'ndvi': {
+      'name': 'वनस्पति सूचकांक (NDVI)',
+      'nameEn': 'Vegetation Index',
+      'icon': Icons.grass,
+      'color': Color(0xFF2E7D32),
+      'description': 'Sentinel-2 से NDVI डेटा',
+      'unit': 'Index',
+      'source': 'Sentinel-2 Satellite',
+    },
+    'soil_texture': {
+      'name': 'मृदा बनावट',
+      'nameEn': 'Soil Texture',
+      'icon': Icons.layers,
+      'color': Color(0xFF6D4C41),
+      'description': 'मिट्टी की संरचना और प्रकार',
+      'unit': 'Type',
+      'source': 'ISRO Bhuvan',
+    },
+  };
 
   // District-wise crop data
   final List<Map<String, dynamic>> districts = [
@@ -201,12 +233,35 @@ class _EnhancedSatelliteScreenState extends State<EnhancedSatelliteScreen> with 
               maxZoom: 18.0,
             ),
             children: [
+              // Base layer
               TileLayer(
                 urlTemplate: _selectedLayer == 'satellite'
                     ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
                     : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 userAgentPackageName: 'com.pmfby.app',
               ),
+              // Satellite Data Overlay Layers
+              if (_selectedDataLayer == 'soil_moisture')
+                TileLayer(
+                  urlTemplate: 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/SMAP_L4_Analyzed_Root_Zone_Soil_Moisture/default/{time}/GoogleMapsCompatible_Level6/{z}/{y}/{x}.png',
+                  additionalOptions: const {
+                    'time': '2024-12-01', // Dynamic date
+                  },
+                  userAgentPackageName: 'com.pmfby.app',
+                  opacity: 0.7,
+                ),
+              if (_selectedDataLayer == 'ndvi')
+                TileLayer(
+                  urlTemplate: 'https://services.sentinel-hub.com/ogc/wms/YOUR_INSTANCE_ID?REQUEST=GetMap&LAYERS=NDVI&WIDTH=256&HEIGHT=256&BBOX={bbox}&FORMAT=image/png',
+                  userAgentPackageName: 'com.pmfby.app',
+                  opacity: 0.7,
+                ),
+              if (_selectedDataLayer == 'soil_texture')
+                TileLayer(
+                  urlTemplate: 'https://bhuvan-vec1.nrsc.gov.in/bhuvan/gwc/service/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=india3&BBOX={bbox}&WIDTH=256&HEIGHT=256&FORMAT=image/png',
+                  userAgentPackageName: 'com.pmfby.app',
+                  opacity: 0.6,
+                ),
               // District markers
               if (_showDistricts)
                 MarkerLayer(
@@ -468,6 +523,64 @@ class _EnhancedSatelliteScreenState extends State<EnhancedSatelliteScreen> with 
               ),
             ),
 
+          // Satellite Data Layer Selector (Left side)
+          Positioned(
+            left: 16,
+            bottom: _selectedFeature != null ? 320 : 100,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.15),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'सैटेलाइट डेटा',
+                    style: GoogleFonts.notoSansDevanagari(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildDataLayerButton('soil_moisture'),
+                  const SizedBox(height: 8),
+                  _buildDataLayerButton('ndvi'),
+                  const SizedBox(height: 8),
+                  _buildDataLayerButton('soil_texture'),
+                  if (_selectedDataLayer != 'none') ...[
+                    const SizedBox(height: 12),
+                    TextButton.icon(
+                      onPressed: () {
+                        setState(() {
+                          _selectedDataLayer = 'none';
+                        });
+                      },
+                      icon: const Icon(Icons.close, size: 16),
+                      label: Text(
+                        'Clear',
+                        style: GoogleFonts.poppins(fontSize: 12),
+                      ),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.red,
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+
           // Zoom controls
           Positioned(
             right: 16,
@@ -721,6 +834,209 @@ class _EnhancedSatelliteScreenState extends State<EnhancedSatelliteScreen> with 
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildDataLayerButton(String layerKey) {
+    final layer = dataLayerInfo[layerKey]!;
+    final isSelected = _selectedDataLayer == layerKey;
+    
+    return InkWell(
+      onTap: () {
+        setState(() {
+          _selectedDataLayer = isSelected ? 'none' : layerKey;
+        });
+        if (!isSelected) {
+          _showDataLayerInfo(layerKey);
+        }
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: isSelected ? layer['color'] : Colors.grey.shade50,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? layer['color'] : Colors.grey.shade300,
+            width: 2,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              layer['icon'],
+              color: isSelected ? Colors.white : layer['color'],
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  layer['name'],
+                  style: GoogleFonts.notoSansDevanagari(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: isSelected ? Colors.white : Colors.black87,
+                  ),
+                ),
+                Text(
+                  layer['nameEn'],
+                  style: GoogleFonts.poppins(
+                    fontSize: 9,
+                    color: isSelected ? Colors.white70 : Colors.grey.shade600,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showDataLayerInfo(String layerKey) {
+    final layer = dataLayerInfo[layerKey]!;
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(layer['icon'], color: layer['color']),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    layer['name'],
+                    style: GoogleFonts.notoSansDevanagari(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    layer['nameEn'],
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              layer['description'],
+              style: GoogleFonts.notoSansDevanagari(fontSize: 14),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.satellite_alt, size: 16),
+                      const SizedBox(width: 8),
+                      Text(
+                        'स्रोत: ${layer['source']}',
+                        style: GoogleFonts.notoSansDevanagari(fontSize: 12),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  _buildLegend(layerKey),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'बंद करें',
+              style: GoogleFonts.notoSansDevanagari(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLegend(String layerKey) {
+    switch (layerKey) {
+      case 'soil_moisture':
+        return Column(
+          children: [
+            _buildLegendItem(Colors.brown.shade900, '0-10%', 'बहुत शुष्क'),
+            _buildLegendItem(Colors.orange.shade700, '10-20%', 'शुष्क'),
+            _buildLegendItem(Colors.yellow.shade600, '20-30%', 'मध्यम'),
+            _buildLegendItem(Colors.lightGreen.shade600, '30-40%', 'नम'),
+            _buildLegendItem(Colors.blue.shade700, '40%+', 'बहुत नम'),
+          ],
+        );
+      case 'ndvi':
+        return Column(
+          children: [
+            _buildLegendItem(Colors.red.shade700, '-1 to 0', 'जल/बंजर'),
+            _buildLegendItem(Colors.orange.shade600, '0-0.2', 'खराब'),
+            _buildLegendItem(Colors.yellow.shade600, '0.2-0.4', 'मध्यम'),
+            _buildLegendItem(Colors.lightGreen.shade600, '0.4-0.6', 'अच्छा'),
+            _buildLegendItem(Colors.green.shade800, '0.6-1.0', 'उत्कृष्ट'),
+          ],
+        );
+      case 'soil_texture':
+        return Column(
+          children: [
+            _buildLegendItem(Colors.brown.shade900, 'Clay', 'चिकनी मिट्टी'),
+            _buildLegendItem(Colors.brown.shade600, 'Loam', 'दोमट'),
+            _buildLegendItem(Colors.brown.shade400, 'Sandy Loam', 'रेतीली दोमट'),
+            _buildLegendItem(Colors.brown.shade200, 'Sandy', 'रेतीली'),
+          ],
+        );
+      default:
+        return Container();
+    }
+  }
+
+  Widget _buildLegendItem(Color color, String value, String label) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Container(
+            width: 16,
+            height: 16,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            '$value - ',
+            style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w500),
+          ),
+          Text(
+            label,
+            style: GoogleFonts.notoSansDevanagari(fontSize: 11),
+          ),
+        ],
+      ),
     );
   }
 
