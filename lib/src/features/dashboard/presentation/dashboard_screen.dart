@@ -735,23 +735,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    _buildActivityTile(
+                    _buildActivityButton(
                       AppStrings.get('dashboard', 'photo_uploaded', context.read<LanguageProvider>().currentLanguage),
                       '2 ${AppStrings.get('dashboard', 'hours_ago', context.read<LanguageProvider>().currentLanguage)}',
                       Icons.check_circle,
                       Colors.green,
+                      () => context.push('/upload-status'),
                     ),
-                    _buildActivityTile(
+                    _buildActivityButton(
                       AppStrings.get('dashboard', 'ai_analysis_complete', context.read<LanguageProvider>().currentLanguage),
                       '3 ${AppStrings.get('dashboard', 'hours_ago', context.read<LanguageProvider>().currentLanguage)}',
                       Icons.analytics,
                       Colors.blue,
+                      () => context.push('/satellite'),
                     ),
-                    _buildActivityTile(
+                    _buildActivityButton(
                       AppStrings.get('dashboard', 'claim_approved', context.read<LanguageProvider>().currentLanguage),
                       '1 ${AppStrings.get('dashboard', 'days_ago', context.read<LanguageProvider>().currentLanguage)}',
                       Icons.verified,
                       Colors.green,
+                      () {
+                        setState(() => _selectedIndex = 1); // Switch to Claims tab
+                      },
                     ),
                   ],
                 ),
@@ -972,53 +977,68 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildActivityTile(
+  Widget _buildActivityButton(
     String title,
     String time,
     IconData icon,
     Color color,
+    VoidCallback onTap,
   ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
+      child: Material(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade200),
             ),
-            child: Icon(icon, color: color, size: 20),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                Text(
-                  title,
-                  style: GoogleFonts.notoSans(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(icon, color: color, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: GoogleFonts.notoSans(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        time,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                Text(
-                  time,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                  ),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  size: 16,
+                  color: Colors.grey.shade400,
                 ),
               ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }

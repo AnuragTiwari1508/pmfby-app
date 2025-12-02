@@ -20,7 +20,7 @@ class _ClaimsListScreenState extends State<ClaimsListScreen> with SingleTickerPr
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
   }
 
   @override
@@ -32,6 +32,15 @@ class _ClaimsListScreenState extends State<ClaimsListScreen> with SingleTickerPr
   // Demo claims data - in production, fetch from Firebase/MongoDB
   List<InsuranceClaim> _getDemoClaims(String status) {
     final now = DateTime.now();
+    
+    // Return all claims for 'all' tab
+    if (status == 'all') {
+      return [
+        ..._getDemoClaims('active'),
+        ..._getDemoClaims('approved'),
+        ..._getDemoClaims('history'),
+      ];
+    }
     
     if (status == 'active') {
       return [
@@ -157,8 +166,10 @@ class _ClaimsListScreenState extends State<ClaimsListScreen> with SingleTickerPr
               controller: _tabController,
               indicatorColor: Colors.white,
               indicatorWeight: 3,
-              labelStyle: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 13),
+              labelStyle: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 12),
+              isScrollable: true,
               tabs: [
+                Tab(text: AppStrings.get('officer', 'all_claims', lang)),
                 Tab(text: AppStrings.get('claims', 'active', lang)),
                 Tab(text: AppStrings.get('status', 'approved', lang)),
                 Tab(text: AppStrings.get('claims', 'history', lang)),
@@ -175,6 +186,7 @@ class _ClaimsListScreenState extends State<ClaimsListScreen> with SingleTickerPr
           body: TabBarView(
             controller: _tabController,
             children: [
+              _buildClaimsList('all', lang),
               _buildClaimsList('active', lang),
               _buildClaimsList('approved', lang),
               _buildClaimsList('history', lang),
