@@ -501,7 +501,6 @@ class _EnhancedSatelliteScreenState extends State<EnhancedSatelliteScreen> with 
             ),
           ),
         ],
-      ),
     );
   }
 
