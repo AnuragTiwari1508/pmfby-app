@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../weather/weather_screen.dart';
 
 class EnhancedSatelliteScreen extends StatefulWidget {
   const EnhancedSatelliteScreen({super.key});
@@ -10,8 +11,9 @@ class EnhancedSatelliteScreen extends StatefulWidget {
   State<EnhancedSatelliteScreen> createState() => _EnhancedSatelliteScreenState();
 }
 
-class _EnhancedSatelliteScreenState extends State<EnhancedSatelliteScreen> {
+class _EnhancedSatelliteScreenState extends State<EnhancedSatelliteScreen> with SingleTickerProviderStateMixin {
   final MapController _mapController = MapController();
+  late TabController _tabController;
   bool _showCropHealth = true;
   bool _showWeather = true;
   bool _showDistricts = true;
@@ -140,10 +142,54 @@ class _EnhancedSatelliteScreenState extends State<EnhancedSatelliteScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFFAFAFA),
-      body: Stack(
+      appBar: AppBar(
+        title: Text(
+          'Satellite & Weather',
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: const [
+            Tab(
+              icon: Icon(Icons.satellite_alt),
+              text: 'Satellite',
+            ),
+            Tab(
+              icon: Icon(Icons.cloud),
+              text: 'Weather',
+            ),
+          ],
+        ),
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          _buildSatelliteView(),
+          const WeatherScreen(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSatelliteView() {
+    return Stack(
         children: [
           // Map
           FlutterMap(
