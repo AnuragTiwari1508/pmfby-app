@@ -105,11 +105,11 @@ class _PremiumCalculatorScreenState extends State<PremiumCalculatorScreen> {
       
       setState(() {});
       
-      _showResultDialog();
+      _showResultDialog(context.read<LanguageProvider>().currentLanguage);
     }
   }
   
-  void _showResultDialog() {
+  void _showResultDialog(String lang) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -119,7 +119,7 @@ class _PremiumCalculatorScreenState extends State<PremiumCalculatorScreen> {
             Icon(Icons.calculate, color: Colors.green.shade700, size: 28),
             const SizedBox(width: 12),
             Text(
-              'Premium Calculated',
+              AppStrings.get('premium', 'premium_calculated', lang),
               style: GoogleFonts.poppins(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -132,10 +132,10 @@ class _PremiumCalculatorScreenState extends State<PremiumCalculatorScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildResultRow('Sum Insured:', '₹${_sumInsured!.toStringAsFixed(2)}'),
+            _buildResultRow(AppStrings.get('premium', 'sum_insured', lang) + ':', '₹${_sumInsured!.toStringAsFixed(2)}'),
             const Divider(height: 24),
             _buildResultRow(
-              'Premium Amount:',
+              AppStrings.get('premium', 'premium_amount', lang) + ':',
               '₹${_calculatedPremium!.toStringAsFixed(2)}',
               highlight: true,
             ),
@@ -150,7 +150,7 @@ class _PremiumCalculatorScreenState extends State<PremiumCalculatorScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Coverage Details:',
+                    AppStrings.get('premium', 'coverage_details', lang) + ':',
                     style: GoogleFonts.poppins(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -158,17 +158,19 @@ class _PremiumCalculatorScreenState extends State<PremiumCalculatorScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  _buildInfoRow('Season', _selectedSeason ?? '-'),
-                  _buildInfoRow('Crop', _selectedCrop?.split('(')[0].trim() ?? '-'),
-                  _buildInfoRow('Area', '${_areaController.text} hectares'),
-                  _buildInfoRow('State', _selectedState ?? '-'),
-                  _buildInfoRow('District', _selectedDistrict ?? '-'),
+                  _buildInfoRow(AppStrings.get('premium', 'season', lang), _selectedSeason ?? '-'),
+                  _buildInfoRow(lang == 'hi' ? 'फसल' : 'Crop', _selectedCrop?.split('(')[0].trim() ?? '-'),
+                  _buildInfoRow(lang == 'hi' ? 'क्षेत्र' : 'Area', '${_areaController.text} hectares'),
+                  _buildInfoRow(lang == 'hi' ? 'राज्य' : 'State', _selectedState ?? '-'),
+                  _buildInfoRow(lang == 'hi' ? 'जिला' : 'District', _selectedDistrict ?? '-'),
                 ],
               ),
             ),
             const SizedBox(height: 12),
             Text(
-              'Note: This is an estimated calculation. Actual premium may vary based on government subsidies and local factors.',
+              lang == 'hi' 
+                  ? 'नोट: यह एक अनुमानित गणना है। वास्तविक प्रीमियम सरकारी सब्सिडी और स्थानीय कारकों के आधार पर भिन्न हो सकता है।'
+                  : 'Note: This is an estimated calculation. Actual premium may vary based on government subsidies and local factors.',
               style: GoogleFonts.roboto(
                 fontSize: 11,
                 color: Colors.grey.shade600,
@@ -181,7 +183,7 @@ class _PremiumCalculatorScreenState extends State<PremiumCalculatorScreen> {
           TextButton(
             onPressed: () => context.pop(),
             child: Text(
-              'Close',
+              AppStrings.get('premium', 'close', lang),
               style: GoogleFonts.poppins(
                 color: Colors.grey.shade600,
                 fontWeight: FontWeight.w500,
@@ -200,7 +202,7 @@ class _PremiumCalculatorScreenState extends State<PremiumCalculatorScreen> {
               ),
             ),
             child: Text(
-              'Calculate Again',
+              AppStrings.get('premium', 'calculate_again', context.read<LanguageProvider>().currentLanguage),
               style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
             ),
           ),
@@ -368,60 +370,60 @@ class _PremiumCalculatorScreenState extends State<PremiumCalculatorScreen> {
                         
                         // Season dropdown
                         _buildDropdownField(
-                          label: 'Season (मौसम)',
+                          label: '${AppStrings.get('premium', 'season', lang)} (${lang == 'hi' ? 'मौसम' : 'Season'})',
                           icon: Icons.wb_sunny_outlined,
                           value: _selectedSeason,
                           items: _seasons,
                           onChanged: (value) => setState(() => _selectedSeason = value),
-                          validator: (value) => value == null ? 'Please select season' : null,
+                          validator: (value) => value == null ? (lang == 'hi' ? 'कृपया मौसम चुनें' : 'Please select season') : null,
                         ),
                         
                         const SizedBox(height: 16),
                         
                         // Year dropdown
                         _buildDropdownField(
-                          label: 'Year (वर्ष)',
+                          label: '${AppStrings.get('premium', 'year', lang)} (${lang == 'hi' ? 'वर्ष' : 'Year'})',
                           icon: Icons.calendar_today,
                           value: _selectedYear,
                           items: _years,
                           onChanged: (value) => setState(() => _selectedYear = value),
-                          validator: (value) => value == null ? 'Please select year' : null,
+                          validator: (value) => value == null ? (lang == 'hi' ? 'कृपया वर्ष चुनें' : 'Please select year') : null,
                         ),
                         
                         const SizedBox(height: 16),
                         
                         // Scheme dropdown
                         _buildDropdownField(
-                          label: 'Insurance Scheme (योजना)',
+                          label: '${AppStrings.get('premium', 'insurance_scheme', lang)} (${lang == 'hi' ? 'योजना' : 'Scheme'})',
                           icon: Icons.policy,
                           value: _selectedScheme,
                           items: _schemes,
                           onChanged: (value) => setState(() => _selectedScheme = value),
-                          validator: (value) => value == null ? 'Please select scheme' : null,
+                          validator: (value) => value == null ? (lang == 'hi' ? 'कृपया योजना चुनें' : 'Please select scheme') : null,
                         ),
                         
                         const SizedBox(height: 16),
                         
                         // State dropdown
                         _buildDropdownField(
-                          label: 'State (राज्य)',
+                          label: '${AppStrings.get('premium', 'select_state', lang)} (${lang == 'hi' ? 'राज्य' : 'State'})',
                           icon: Icons.location_city,
                           value: _selectedState,
                           items: _states,
                           onChanged: _onStateChanged,
-                          validator: (value) => value == null ? 'Please select state' : null,
+                          validator: (value) => value == null ? (lang == 'hi' ? 'कृपया राज्य चुनें' : 'Please select state') : null,
                         ),
                         
                         const SizedBox(height: 16),
                         
                         // District dropdown
                         _buildDropdownField(
-                          label: 'District (जिला)',
+                          label: '${AppStrings.get('premium', 'select_district', lang)} (${lang == 'hi' ? 'जिला' : 'District'})',
                           icon: Icons.place_outlined,
                           value: _selectedDistrict,
                           items: _districts,
                           onChanged: (value) => setState(() => _selectedDistrict = value),
-                          validator: (value) => value == null ? 'Please select district' : null,
+                          validator: (value) => value == null ? (lang == 'hi' ? 'कृपया जिला चुनें' : 'Please select district') : null,
                           enabled: _selectedState != null,
                         ),
                         
@@ -429,32 +431,32 @@ class _PremiumCalculatorScreenState extends State<PremiumCalculatorScreen> {
                         
                         // Crop dropdown
                         _buildDropdownField(
-                          label: 'Crop Type (फसल का प्रकार)',
+                          label: '${AppStrings.get('premium', 'crop_type', lang)} (${lang == 'hi' ? 'फसल का प्रकार' : 'Crop Type'})',
                           icon: Icons.eco,
                           value: _selectedCrop,
                           items: _crops,
                           onChanged: (value) => setState(() => _selectedCrop = value),
-                          validator: (value) => value == null ? 'Please select crop' : null,
+                          validator: (value) => value == null ? (lang == 'hi' ? 'कृपया फसल चुनें' : 'Please select crop') : null,
                         ),
                         
                         const SizedBox(height: 16),
                         
                         // Area text field
                         _buildTextField(
-                          label: 'Crop Area (फसल क्षेत्र)',
+                          label: '${AppStrings.get('premium', 'crop_area', lang)} (${lang == 'hi' ? 'फसल क्षेत्र' : 'Crop Area'})',
                           icon: Icons.square_foot,
                           controller: _areaController,
-                          hint: 'Enter area in hectares',
+                          hint: AppStrings.get('premium', 'enter_area_hectares', lang),
                           keyboardType: TextInputType.number,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Please enter crop area';
+                              return lang == 'hi' ? 'कृपया फसल क्षेत्र दर्ज करें' : 'Please enter crop area';
                             }
                             if (double.tryParse(value) == null) {
-                              return 'Please enter valid number';
+                              return lang == 'hi' ? 'कृपया मान्य संख्या दर्ज करें' : 'Please enter valid number';
                             }
                             if (double.parse(value) <= 0) {
-                              return 'Area must be greater than 0';
+                              return lang == 'hi' ? 'क्षेत्र 0 से अधिक होना चाहिए' : 'Area must be greater than 0';
                             }
                             return null;
                           },
@@ -480,7 +482,7 @@ class _PremiumCalculatorScreenState extends State<PremiumCalculatorScreen> {
                               const Icon(Icons.calculate, size: 24),
                               const SizedBox(width: 12),
                               Text(
-                                'Calculate Premium',
+                                AppStrings.get('premium', 'calculate_premium', lang),
                                 style: GoogleFonts.poppins(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
@@ -504,7 +506,7 @@ class _PremiumCalculatorScreenState extends State<PremiumCalculatorScreen> {
                             ),
                           ),
                           child: Text(
-                            'Reset Form',
+                            AppStrings.get('premium', 'reset_form', lang),
                             style: GoogleFonts.poppins(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
