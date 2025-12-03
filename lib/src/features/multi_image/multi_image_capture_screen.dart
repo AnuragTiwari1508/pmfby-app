@@ -358,7 +358,8 @@ class _MultiImageCaptureScreenState extends State<MultiImageCaptureScreen> {
 
   Future<void> _captureImage() async {
     if (_capturedImages.length >= widget.maxImages) {
-      _showMaxImagesDialog();
+      final lang = context.read<LanguageProvider>().currentLanguage;
+      _showMaxImagesDialog(lang);
       return;
     }
 

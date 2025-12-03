@@ -705,7 +705,7 @@ class _EnhancedCameraScreenState extends State<EnhancedCameraScreen>
                       ),
                     ),
                   ],
-                ),
+                )
     );
   }
 

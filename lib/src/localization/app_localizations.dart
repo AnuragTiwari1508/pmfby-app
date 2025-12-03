@@ -2410,10 +2410,6 @@ class AppStrings {
       'en': 'Done',
       'hi': 'हो गया',
     },
-    'from_gallery': {
-      'en': 'From Gallery',
-      'hi': 'गैलरी से',
-    },
     'compressing_images': {
       'en': 'Compressing images...',
       'hi': 'तस्वीरें संपीड़ित हो रही हैं...',
