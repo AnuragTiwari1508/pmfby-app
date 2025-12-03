@@ -2910,6 +2910,30 @@ class AppStrings {
       'en': 'Date',
       'hi': 'तिथि',
     },
+    'satellite_weather': {
+      'en': 'Satellite & Weather',
+      'hi': 'उपग्रह और मौसम',
+    },
+    'satellite_tab': {
+      'en': 'Satellite',
+      'hi': 'उपग्रह',
+    },
+    'weather_tab': {
+      'en': 'Weather',
+      'hi': 'मौसम',
+    },
+    'satellite_data': {
+      'en': '🛰️ Satellite Data',
+      'hi': '🛰️ सैटेलाइट डेटा',
+    },
+    'realtime_analysis': {
+      'en': 'Real-time Analysis',
+      'hi': 'रीयल-टाइम विश्लेषण',
+    },
+    'remove_all_layers': {
+      'en': 'Remove All Layers',
+      'hi': 'सभी लेयर हटाएं',
+    },
   };
 
   // Uploads
