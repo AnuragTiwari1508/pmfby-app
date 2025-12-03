@@ -705,8 +705,7 @@ class _EnhancedCameraScreenState extends State<EnhancedCameraScreen>
                       ),
                     ),
                   ],
-                )
-    );
+                );
   }
 
   Widget _buildARInfoRow(IconData icon, String label, String value) {
