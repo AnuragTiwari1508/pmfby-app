@@ -591,7 +591,7 @@ class _ARCameraScreenState extends State<ARCameraScreen>
             ),
           ),
 
-        // AR Overlay
+        // AR Overlay - simplified to just show bounding box and tilt
         if (_showAROverlay)
           Positioned.fill(
             child: CustomPaint(
@@ -601,21 +601,21 @@ class _ARCameraScreenState extends State<ARCameraScreen>
                 previewSize: previewSize,
                 showBoundingBox: true,
                 showTiltIndicator: _showTiltIndicator,
-                showQualityIndicator: _showQualityIndicator,
-                showGpsIndicator: _showGpsIndicator,
-                showCropMask: true,
+                showQualityIndicator: false, // Disabled to reduce overlays
+                showGpsIndicator: false, // Disabled to reduce overlays
+                showCropMask: false, // Disabled - was causing black screen
                 pulseAnimation: _pulseAnimationController,
               ),
             ),
           ),
 
-        // Ghost Frame
-        if (_showGhostFrame && widget.multiAngleMode)
+        // Ghost Frame - simplified
+        if (_showGhostFrame && widget.multiAngleMode && _taskManager.currentTask != null)
           Positioned.fill(
             child: CustomPaint(
               painter: GhostFramePainter(
                 task: _taskManager.currentTask?.task,
-                opacity: 0.4,
+                opacity: 0.3,
               ),
             ),
           ),
@@ -848,36 +848,84 @@ class _ARCameraScreenState extends State<ARCameraScreen>
       left: 16,
       right: 16,
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.6),
-          borderRadius: BorderRadius.circular(12),
+          color: Colors.black.withOpacity(0.75),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: ARColors.valid.withOpacity(0.3)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '${AppStrings.get('camera', 'task', lang)} ${_taskManager.currentIndex + 1}/${_taskManager.totalTasks}',
-                  style: GoogleFonts.roboto(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
+            // Task title with icon
+            if (_taskManager.currentTask != null) ...[
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: ARColors.valid.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      _getTaskIcon(_taskManager.currentTask!.task.type),
+                      color: ARColors.valid,
+                      size: 24,
+                    ),
                   ),
-                ),
-                Text(
-                  '${(_taskManager.progress * 100).toInt()}%',
-                  style: GoogleFonts.roboto(
-                    color: ARColors.valid,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _taskManager.currentTask!.task.title,
+                          style: GoogleFonts.roboto(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          'Step ${_taskManager.currentIndex + 1} of ${_taskManager.totalTasks}',
+                          style: GoogleFonts.roboto(
+                            color: Colors.white60,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              // Clear instruction
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-              ],
-            ),
-            const SizedBox(height: 8),
+                child: Row(
+                  children: [
+                    const Icon(Icons.lightbulb_outline, color: Colors.amber, size: 20),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        _taskManager.currentTask!.task.description,
+                        style: GoogleFonts.roboto(
+                          color: Colors.white,
+                          fontSize: 14,
+                          height: 1.3,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+            // Progress bar
             ClipRRect(
               borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
@@ -887,22 +935,25 @@ class _ARCameraScreenState extends State<ARCameraScreen>
                 minHeight: 6,
               ),
             ),
-            if (_taskManager.currentTask != null) ...[
-              const SizedBox(height: 8),
-              Text(
-                _taskManager.currentTask!.task.instruction,
-                style: GoogleFonts.roboto(
-                  color: Colors.white70,
-                  fontSize: 11,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
           ],
         ),
       ),
     );
+  }
+
+  IconData _getTaskIcon(CaptureTaskType type) {
+    switch (type) {
+      case CaptureTaskType.topView:
+        return Icons.arrow_downward;
+      case CaptureTaskType.sideView:
+        return Icons.swap_horiz;
+      case CaptureTaskType.closeUp:
+        return Icons.zoom_in;
+      case CaptureTaskType.wideAngle:
+        return Icons.panorama_wide_angle;
+      case CaptureTaskType.stageSpecific:
+        return Icons.spa;
+    }
   }
 
   Widget _buildStabilityIndicator() {
@@ -924,6 +975,10 @@ class _ARCameraScreenState extends State<ARCameraScreen>
   }
 
   Widget _buildBlockerIndicator(String lang) {
+    // Show as warning instead of blocker
+    final hasWarnings = _validationEngine.hasQualityWarnings();
+    if (!hasWarnings) return const SizedBox.shrink();
+    
     return Positioned(
       bottom: 180,
       left: 16,
@@ -931,18 +986,18 @@ class _ARCameraScreenState extends State<ARCameraScreen>
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: ARColors.error.withOpacity(0.9),
+          color: ARColors.warning.withOpacity(0.85),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
           children: [
-            const Icon(Icons.error_outline, color: Colors.white, size: 20),
+            const Icon(Icons.info_outline, color: Colors.white, size: 20),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 _captureBlockers.isNotEmpty
-                    ? _captureBlockers.first
-                    : AppStrings.get('camera', 'cannot_capture', lang),
+                    ? '${_captureBlockers.first} (tap to capture anyway)'
+                    : 'For best results, hold steady',
                 style: GoogleFonts.roboto(
                   color: Colors.white,
                   fontSize: 13,
@@ -1110,7 +1165,10 @@ class _ARCameraScreenState extends State<ARCameraScreen>
   }
 
   Widget _buildCaptureButton() {
-    final isReady = _captureEnabled && !_isCapturing;
+    // Always allow capture - quality issues are just warnings
+    final hasWarnings = _validationEngine.hasQualityWarnings();
+    final isReady = !_isCapturing;
+    final buttonColor = hasWarnings ? ARColors.warning : ARColors.valid;
 
     return GestureDetector(
       onTap: isReady ? _takePicture : null,
@@ -1127,7 +1185,7 @@ class _ARCameraScreenState extends State<ARCameraScreen>
           boxShadow: isReady
               ? [
                   BoxShadow(
-                    color: ARColors.valid.withOpacity(0.4),
+                    color: buttonColor.withOpacity(0.4),
                     blurRadius: 20,
                     spreadRadius: 2,
                   ),
@@ -1139,7 +1197,7 @@ class _ARCameraScreenState extends State<ARCameraScreen>
           margin: const EdgeInsets.all(4),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: isReady ? ARColors.valid : Colors.white38,
+            color: isReady ? buttonColor : Colors.white38,
           ),
           child: _isCapturing
               ? const Center(
@@ -1152,7 +1210,13 @@ class _ARCameraScreenState extends State<ARCameraScreen>
                     ),
                   ),
                 )
-              : null,
+              : Center(
+                  child: Icon(
+                    Icons.camera_alt,
+                    color: Colors.white,
+                    size: 32,
+                  ),
+                ),
         ),
       ),
     );

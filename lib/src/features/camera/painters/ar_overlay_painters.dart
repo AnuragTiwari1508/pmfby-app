@@ -35,9 +35,10 @@ class AROverlayPainter extends CustomPainter {
     if (showTiltIndicator) {
       _drawTiltIndicator(canvas, size);
     }
-    if (showCropMask && validationState?.segmentation != null) {
-      _drawCropMask(canvas, size);
-    }
+    // Crop mask disabled - was causing black screen issues
+    // if (showCropMask && validationState?.segmentation != null) {
+    //   _drawCropMask(canvas, size);
+    // }
   }
 
   void _drawBoundingBox(Canvas canvas, Size size) {
