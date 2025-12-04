@@ -251,14 +251,25 @@ class _ARCameraScreenState extends State<ARCameraScreen>
   }
 
   void _processFrame(CameraImage image) {
-    if (_isProcessingFrame) return;
+    // Skip if already processing or widget not mounted
+    if (_isProcessingFrame || !mounted) return;
     _isProcessingFrame = true;
 
-    // Process frame in validation engine
-    _validationEngine.processFrame(image).then((_) {
-      _isProcessingFrame = false;
-    }).catchError((e) {
-      _isProcessingFrame = false;
+    // Process frame in validation engine with timeout protection
+    Future.delayed(Duration.zero, () async {
+      try {
+        await _validationEngine.processFrame(image).timeout(
+          const Duration(milliseconds: 200),
+          onTimeout: () {
+            // Skip this frame if processing takes too long
+            debugPrint('Frame processing timeout - skipping frame');
+          },
+        );
+      } catch (e) {
+        debugPrint('Frame processing error: $e');
+      } finally {
+        _isProcessingFrame = false;
+      }
     });
   }
 

@@ -49,7 +49,7 @@ class ARColors {
   static const Color error = Color(0xFFF44336);       // Red
   static const Color neutral = Color(0xFF2196F3);    // Blue
   static const Color ghost = Color(0x4DFFFFFF);       // Semi-transparent white
-  static const Color overlay = Color(0x80000000);     // Semi-transparent black
+  static const Color overlay = Color(0x30000000);     // Very light semi-transparent black (reduced from 0x80)
 }
 
 /// Exposure status
