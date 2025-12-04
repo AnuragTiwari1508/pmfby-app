@@ -58,7 +58,7 @@ class _ARCameraScreenState extends State<ARCameraScreen>
   // Validation & AR
   late ValidationEngine _validationEngine;
   late CaptureTaskManager _taskManager;
-  ValidationState _currentValidation = const ValidationState();
+  ValidationState _currentValidation = ValidationState(timestamp: DateTime.now());
   bool _showAROverlay = true;
   bool _showGrid = true;
   bool _showTiltIndicator = true;
@@ -614,8 +614,8 @@ class _ARCameraScreenState extends State<ARCameraScreen>
           _buildFocusIndicator(size),
 
         // Quality Warning Banner
-        if (_currentValidation.quality != null && 
-            _currentValidation.quality!.overallStatus != QualityStatus.good)
+        if (_currentValidation.imageQuality != null && 
+            _currentValidation.imageQuality!.overallStatus != QualityStatus.good)
           _buildQualityWarning(lang),
 
         // Top Controls
@@ -679,7 +679,7 @@ class _ARCameraScreenState extends State<ARCameraScreen>
   }
 
   Widget _buildQualityWarning(String lang) {
-    final quality = _currentValidation.quality!;
+    final quality = _currentValidation.imageQuality!;
     String warning = '';
     IconData icon = Icons.warning_amber;
 

@@ -301,14 +301,14 @@ class CaptureTaskManager extends ChangeNotifier {
   double _calculateAverageQualityScore() {
     final completedWithValidation = _tasks
         .where((t) => t.status == TaskStatus.completed && 
-                     t.validationState?.quality != null)
+                     t.validationState?.imageQuality != null)
         .toList();
     
     if (completedWithValidation.isEmpty) return 0;
     
     double total = 0;
     for (final task in completedWithValidation) {
-      final quality = task.validationState!.quality!;
+      final quality = task.validationState!.imageQuality!;
       total += (quality.blurScore + quality.exposureScore) / 2;
     }
     
@@ -370,41 +370,33 @@ class CaptureTaskFactory {
   /// Create task set for crop damage assessment
   static List<CaptureTask> createDamageAssessmentTasks() {
     return [
-      CaptureTask(
+      const CaptureTask(
         id: 'damage_overview',
         type: CaptureTaskType.wideAngle,
         title: 'Damage Overview',
-        description: 'Capture wide view showing extent of damage',
-        instruction: 'Stand back and capture the entire damaged area',
-        requiredAngles: [0],
-        isRequired: true,
+        description: 'Stand back and capture the entire damaged area',
       ),
-      CaptureTask(
+      const CaptureTask(
         id: 'damage_closeup_1',
         type: CaptureTaskType.closeUp,
         title: 'Damage Close-up 1',
-        description: 'Close-up of damaged plant tissue',
-        instruction: 'Move close to show damage details clearly',
-        requiredAngles: [0],
-        isRequired: true,
+        description: 'Move close to show damage details clearly',
+        requiredMinDistance: 0.1,
+        requiredMaxDistance: 0.3,
       ),
-      CaptureTask(
+      const CaptureTask(
         id: 'damage_closeup_2',
         type: CaptureTaskType.closeUp,
         title: 'Damage Close-up 2',
-        description: 'Additional close-up of damage',
-        instruction: 'Capture another damaged area',
-        requiredAngles: [0],
-        isRequired: false,
+        description: 'Capture another damaged area',
+        requiredMinDistance: 0.1,
+        requiredMaxDistance: 0.3,
       ),
-      CaptureTask(
+      const CaptureTask(
         id: 'healthy_comparison',
         type: CaptureTaskType.sideView,
         title: 'Healthy Comparison',
-        description: 'Capture healthy plant for comparison',
-        instruction: 'Find a nearby healthy plant and capture it',
-        requiredAngles: [0],
-        isRequired: false,
+        description: 'Find a nearby healthy plant and capture it',
       ),
     ];
   }
@@ -412,90 +404,80 @@ class CaptureTaskFactory {
   /// Create task set for crop growth monitoring
   static List<CaptureTask> createGrowthMonitoringTasks(CropGrowthStage stage) {
     final baseTasks = <CaptureTask>[
-      CaptureTask(
+      const CaptureTask(
         id: 'plant_overview',
         type: CaptureTaskType.sideView,
         title: 'Plant Overview',
-        description: 'Side view of the entire plant',
-        instruction: 'Capture the full plant from the side',
-        requiredAngles: [90],
-        isRequired: true,
+        description: 'Capture the full plant from the side',
       ),
     ];
 
     // Add stage-specific tasks
     switch (stage) {
       case CropGrowthStage.seedling:
-        baseTasks.add(CaptureTask(
+        baseTasks.add(const CaptureTask(
           id: 'seedling_closeup',
           type: CaptureTaskType.closeUp,
           title: 'Seedling Close-up',
-          description: 'Close-up of seedling',
-          instruction: 'Capture emerging leaves clearly',
-          requiredAngles: [0],
-          isRequired: true,
+          description: 'Capture emerging leaves clearly',
+          requiredMinDistance: 0.1,
+          requiredMaxDistance: 0.3,
         ));
         break;
       case CropGrowthStage.vegetative:
-        baseTasks.add(CaptureTask(
+        baseTasks.add(const CaptureTask(
           id: 'leaf_detail',
           type: CaptureTaskType.closeUp,
           title: 'Leaf Detail',
-          description: 'Close-up of leaf',
-          instruction: 'Show leaf condition and color',
-          requiredAngles: [0],
-          isRequired: true,
+          description: 'Show leaf condition and color',
+          requiredMinDistance: 0.1,
+          requiredMaxDistance: 0.3,
         ));
-        baseTasks.add(CaptureTask(
+        baseTasks.add(const CaptureTask(
           id: 'canopy_top',
           type: CaptureTaskType.topView,
           title: 'Canopy Top View',
-          description: 'Top-down view of plant canopy',
-          instruction: 'Look down at the plant from above',
-          requiredAngles: [0],
-          isRequired: false,
+          description: 'Look down at the plant from above',
+          requiredMinPitch: -90,
+          requiredMaxPitch: -60,
         ));
         break;
       case CropGrowthStage.flowering:
-        baseTasks.add(CaptureTask(
+        baseTasks.add(const CaptureTask(
           id: 'flower_closeup',
           type: CaptureTaskType.closeUp,
           title: 'Flower Close-up',
-          description: 'Close-up of flowers',
-          instruction: 'Capture flowers clearly',
-          requiredAngles: [0],
-          isRequired: true,
+          description: 'Capture flowers clearly',
+          requiredMinDistance: 0.1,
+          requiredMaxDistance: 0.3,
         ));
         break;
       case CropGrowthStage.fruiting:
-        baseTasks.add(CaptureTask(
+        baseTasks.add(const CaptureTask(
           id: 'fruit_closeup',
           type: CaptureTaskType.closeUp,
           title: 'Fruit Close-up',
-          description: 'Close-up of developing fruit',
-          instruction: 'Show fruit development stage',
-          requiredAngles: [0],
-          isRequired: true,
+          description: 'Show fruit development stage',
+          requiredMinDistance: 0.1,
+          requiredMaxDistance: 0.3,
         ));
         break;
       case CropGrowthStage.maturity:
-        baseTasks.add(CaptureTask(
+        baseTasks.add(const CaptureTask(
           id: 'mature_crop',
           type: CaptureTaskType.closeUp,
           title: 'Mature Crop',
-          description: 'Close-up of mature crop',
-          instruction: 'Show harvest-ready indicators',
-          requiredAngles: [0],
-          isRequired: true,
+          description: 'Show harvest-ready indicators',
+          requiredMinDistance: 0.1,
+          requiredMaxDistance: 0.3,
         ));
-        baseTasks.add(CaptureTask(
+        baseTasks.add(const CaptureTask(
           id: 'field_yield',
           type: CaptureTaskType.wideAngle,
           title: 'Field Yield View',
-          description: 'Wide view for yield estimation',
-          instruction: 'Capture wide view of field for yield assessment',
-          requiredAngles: [0],
-          isRequired: false,
+          description: 'Capture wide view of field for yield assessment',
+          requiredMinDistance: 2.0,
+          requiredMaxDistance: 10.0,
         ));
         break;
       default:
@@ -508,14 +490,11 @@ class CaptureTaskFactory {
   /// Create minimal task set (for quick capture)
   static List<CaptureTask> createMinimalTasks() {
     return [
-      CaptureTask(
+      const CaptureTask(
         id: 'quick_capture',
         type: CaptureTaskType.sideView,
         title: 'Quick Capture',
-        description: 'Single capture of crop',
-        instruction: 'Frame the crop in view and capture',
-        requiredAngles: [0],
-        isRequired: true,
+        description: 'Frame the crop in view and capture',
       ),
     ];
   }

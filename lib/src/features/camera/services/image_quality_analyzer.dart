@@ -1,5 +1,4 @@
 import 'dart:math' as math;
-import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import '../models/ar_camera_models.dart';
@@ -132,9 +131,9 @@ class ImageQualityAnalyzer {
     
     // Map to score: higher variance = sharper
     // Typical blur threshold is around 100-500 depending on resolution
-    final score = math.min(100, (normalizedVariance / 10).clamp(0, 100));
+    final score = math.min(100.0, (normalizedVariance / 10).clamp(0.0, 100.0));
     
-    return score;
+    return score.toDouble();
   }
 
   /// Calculate exposure and brightness metrics
@@ -252,9 +251,14 @@ class ImageQualityAnalyzer {
     
     // Map difference to stability score
     // Low difference = high stability
-    final stability = math.max(0, 100 - (avgDiff * 2));
+    final stability = math.max(0.0, 100.0 - (avgDiff * 2));
     
-    return stability;
+    return stability.toDouble();
+  }
+
+  /// Dispose resources
+  void dispose() {
+    reset();
   }
 
   /// Reset cached results
@@ -275,6 +279,12 @@ class StabilityTracker {
   bool _isStable = false;
   DateTime? _stableStartTime;
   static const Duration requiredStableDuration = Duration(milliseconds: 500);
+
+  /// Add accelerometer sample (x, y, z)
+  void addSample(double x, double y, double z) {
+    final magnitude = math.sqrt(x * x + y * y + z * z);
+    updateSensorData(accelerometerMagnitude: magnitude);
+  }
 
   /// Update with new sensor readings
   void updateSensorData({
@@ -339,4 +349,7 @@ class StabilityTracker {
     _isStable = false;
     _stableStartTime = null;
   }
+
+  /// Dispose (alias for reset for consistency)
+  void dispose() => reset();
 }

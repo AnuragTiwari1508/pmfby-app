@@ -238,7 +238,8 @@ class CropSegmentationService {
       cropDetected: coverage >= 0.05,
       confidence: coverage.clamp(0.0, 1.0),
       cropBoundingBox: boundingBox,
-      coveragePercentage: coverage * 100,
+      coverage: coverage,
+      status: status,
     );
   }
 
@@ -290,7 +291,8 @@ class CropSegmentationService {
       cropDetected: false,
       confidence: 0.0,
       cropBoundingBox: null,
-      coveragePercentage: 0.0,
+      coverage: 0.0,
+      status: SegmentationStatus.noCropDetected,
     );
   }
 

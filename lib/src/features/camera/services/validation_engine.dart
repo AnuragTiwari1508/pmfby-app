@@ -68,7 +68,7 @@ class ValidationEngine {
   ValidationCallback? onValidationUpdate;
   
   // Current state
-  ValidationState _currentState = const ValidationState();
+  ValidationState _currentState = ValidationState(timestamp: DateTime.now());
   ValidationState get currentState => _currentState;
   
   // Sensor subscriptions
@@ -101,9 +101,7 @@ class ValidationEngine {
     this.thresholds = ValidationThresholds.standard,
     this.onValidationUpdate,
   })  : _qualityAnalyzer = ImageQualityAnalyzer(),
-        _stabilityTracker = StabilityTracker(
-          requiredStableDuration: Duration(milliseconds: thresholds.stableDurationMs),
-        );
+        _stabilityTracker = StabilityTracker();
 
   /// Start validation engine
   Future<void> start() async {
@@ -156,7 +154,13 @@ class ValidationEngine {
   /// Update distance estimation (from ML or sensor data)
   void updateDistanceEstimate(double estimatedMeters, double confidence) {
     _lastDistanceEstimate = DistanceEstimate(
-      estimatedMeters: estimatedMeters,
+      distanceMeters: estimatedMeters,
+      status: estimatedMeters < thresholds.minDistance 
+          ? DistanceStatus.tooClose 
+          : (estimatedMeters > thresholds.maxDistance ? DistanceStatus.tooFar : DistanceStatus.optimal),
+      message: estimatedMeters < thresholds.minDistance 
+          ? 'Move back' 
+          : (estimatedMeters > thresholds.maxDistance ? 'Move closer' : 'Good distance'),
       confidence: confidence,
     );
     _updateState(distance: _lastDistanceEstimate);
@@ -184,8 +188,8 @@ class ValidationEngine {
     final state = _currentState;
     
     // Check quality
-    if (state.quality != null) {
-      if (state.quality!.overallStatus == QualityStatus.error) {
+    if (state.imageQuality != null) {
+      if (state.imageQuality!.overallStatus == QualityStatus.error) {
         return false;
       }
     }
@@ -210,17 +214,17 @@ class ValidationEngine {
     final blockers = <String>[];
     final state = _currentState;
     
-    if (state.quality != null) {
-      if (state.quality!.isBlurry) {
+    if (state.imageQuality != null) {
+      if (state.imageQuality!.isBlurry) {
         blockers.add('Image is blurry - hold steady');
       }
-      if (state.quality!.exposureStatus == ExposureStatus.overexposed) {
+      if (state.imageQuality!.exposureStatus == ExposureStatus.overexposed) {
         blockers.add('Too bright - move to shade or reduce exposure');
       }
-      if (state.quality!.exposureStatus == ExposureStatus.underexposed) {
+      if (state.imageQuality!.exposureStatus == ExposureStatus.underexposed) {
         blockers.add('Too dark - move to better lighting');
       }
-      if (state.quality!.hasBacklight) {
+      if (state.imageQuality!.hasBacklight) {
         blockers.add('Backlight detected - reposition camera');
       }
     }
@@ -259,9 +263,9 @@ class ValidationEngine {
     final state = _currentState;
     
     // Quality contribution (40%)
-    if (state.quality != null) {
-      final qualityScore = (state.quality!.blurScore + 
-          state.quality!.exposureScore) / 2;
+    if (state.imageQuality != null) {
+      final qualityScore = (state.imageQuality!.blurScore + 
+          state.imageQuality!.exposureScore) / 2;
       score *= (qualityScore / 100) * 0.4 + 0.6;
     }
     
@@ -370,9 +374,24 @@ class ValidationEngine {
       status = TiltStatus.tilted;
     }
     
+    String message = 'Level';
+    TiltDirection? direction;
+    if (status == TiltStatus.tilted || status == TiltStatus.slightlyTilted) {
+      if (_currentPitch.abs() > _currentRoll.abs()) {
+        direction = _currentPitch > 0 ? TiltDirection.tiltBack : TiltDirection.tiltForward;
+        message = _currentPitch > 0 ? 'Tilt forward' : 'Tilt back';
+      } else {
+        direction = _currentRoll > 0 ? TiltDirection.tiltLeft : TiltDirection.tiltRight;
+        message = _currentRoll > 0 ? 'Tilt left' : 'Tilt right';
+      }
+    }
+    
     final tilt = TiltEstimate(
       pitchDegrees: _currentPitch,
       rollDegrees: _currentRoll,
+      status: status,
+      message: message,
+      nudgeDirection: direction,
     );
     
     _updateState(tilt: tilt);
@@ -402,6 +421,9 @@ class ValidationEngine {
           accuracy: 0,
           timestamp: DateTime.now(),
           isInsideFarmBoundary: false,
+          distanceFromBoundary: 0,
+          status: GpsStatus.noFix,
+          message: 'GPS not available',
         ),
       );
     }
@@ -416,6 +438,9 @@ class ValidationEngine {
           accuracy: 0,
           timestamp: DateTime.now(),
           isInsideFarmBoundary: false,
+          distanceFromBoundary: 0,
+          status: GpsStatus.noFix,
+          message: 'Acquiring GPS...',
         ),
       );
       return;
@@ -436,7 +461,9 @@ class ValidationEngine {
       accuracy: _currentPosition!.accuracy,
       timestamp: DateTime.now(),
       isInsideFarmBoundary: isInside,
-      farmPlotId: null, // Set from context
+      distanceFromBoundary: 0, // TODO: Calculate distance from boundary
+      status: isInside ? GpsStatus.insideBoundary : GpsStatus.outsideBoundary,
+      message: isInside ? 'Inside farm boundary' : 'Outside farm boundary',
     );
     
     _updateState(gps: gpsResult);
@@ -466,8 +493,9 @@ class ValidationEngine {
       return const ImageQualityResult(
         blurScore: 0,
         exposureScore: 0,
-        isBlurry: true,
+        brightnessScore: 0,
         hasBacklight: false,
+        overallStatus: QualityStatus.warning,
         warnings: ['No quality data'],
       );
     }
@@ -503,11 +531,20 @@ class ValidationEngine {
     if (avgExposure < 30) warnings.add('Low exposure');
     if (avgExposure > 90) warnings.add('Overexposed');
     
+    // Determine overall status
+    QualityStatus overallStatus = QualityStatus.good;
+    if (isBlurry || avgExposure < 20 || avgExposure > 90) {
+      overallStatus = QualityStatus.error;
+    } else if (hasBacklight || avgExposure < 30 || avgExposure > 80) {
+      overallStatus = QualityStatus.warning;
+    }
+    
     return ImageQualityResult(
       blurScore: avgBlur,
       exposureScore: avgExposure,
-      isBlurry: isBlurry,
+      brightnessScore: avgExposure,
       hasBacklight: hasBacklight,
+      overallStatus: overallStatus,
       warnings: warnings,
     );
   }
@@ -520,7 +557,7 @@ class ValidationEngine {
     CropSegmentationResult? segmentation,
   }) {
     _currentState = ValidationState(
-      quality: quality ?? _currentState.quality,
+      imageQuality: quality ?? _currentState.imageQuality,
       distance: distance ?? _currentState.distance,
       tilt: tilt ?? _currentState.tilt,
       gps: gps ?? _currentState.gps,
@@ -559,7 +596,7 @@ class CaptureValidationResult {
       canCapture: engine.canCapture(),
       score: engine.getValidationScore(),
       blockers: engine.getCaptureBlockers(),
-      warnings: engine.currentState.quality?.warnings ?? [],
+      warnings: engine.currentState.imageQuality?.warnings ?? [],
       state: engine.currentState,
     );
   }

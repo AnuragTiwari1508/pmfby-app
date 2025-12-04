@@ -11,14 +11,16 @@ enum CaptureTaskType {
 
 /// Growth stage classification
 enum CropGrowthStage {
+  unknown,
   sowing,
   germination,
+  seedling,
   vegetative,
   flowering,
   fruiting,
   maturity,
   harvest,
-  unknown,
+  harvested,
 }
 
 /// Image quality status
@@ -50,16 +52,25 @@ class ARColors {
   static const Color overlay = Color(0x80000000);     // Semi-transparent black
 }
 
+/// Exposure status
+enum ExposureStatus {
+  underexposed,
+  normal,
+  overexposed,
+}
+
 /// Distance estimation result
 class DistanceEstimate {
   final double distanceMeters;
   final DistanceStatus status;
   final String message;
+  final double confidence;
 
   const DistanceEstimate({
     required this.distanceMeters,
     required this.status,
     required this.message,
+    this.confidence = 0.8,
   });
 
   static const double idealMinDistance = 0.3;  // 30cm
@@ -161,6 +172,7 @@ class ImageQualityResult {
   final double exposureScore;      // 0-100, 50 is ideal
   final double brightnessScore;    // 0-100
   final bool hasBacklight;
+  final ExposureStatus exposureStatus;
   final QualityStatus overallStatus;
   final List<String> warnings;
 
@@ -169,9 +181,12 @@ class ImageQualityResult {
     required this.exposureScore,
     required this.brightnessScore,
     required this.hasBacklight,
+    this.exposureStatus = ExposureStatus.normal,
     required this.overallStatus,
     required this.warnings,
   });
+
+  bool get isBlurry => blurScore < minBlurScore;
 
   static const double minBlurScore = 30.0;
   static const double minExposureScore = 20.0;
@@ -225,6 +240,7 @@ class GpsVerificationResult {
   final double latitude;
   final double longitude;
   final double accuracy;
+  final DateTime timestamp;
   final bool isInsideFarmBoundary;
   final double distanceFromBoundary;
   final GpsStatus status;
@@ -234,6 +250,7 @@ class GpsVerificationResult {
     required this.latitude,
     required this.longitude,
     required this.accuracy,
+    required this.timestamp,
     required this.isInsideFarmBoundary,
     required this.distanceFromBoundary,
     required this.status,
@@ -241,10 +258,11 @@ class GpsVerificationResult {
   });
 
   factory GpsVerificationResult.noFix() {
-    return const GpsVerificationResult(
+    return GpsVerificationResult(
       latitude: 0,
       longitude: 0,
       accuracy: 0,
+      timestamp: DateTime.now(),
       isInsideFarmBoundary: false,
       distanceFromBoundary: 0,
       status: GpsStatus.noFix,
@@ -394,6 +412,12 @@ class CaptureTask {
       ),
     ];
   }
+
+  /// Alias for getStandardTasks for compatibility
+  static List<CaptureTask> get standardMultiAngleTasks => getStandardTasks();
+
+  /// Get instruction text
+  String get instruction => description;
 }
 
 /// Overall validation state
