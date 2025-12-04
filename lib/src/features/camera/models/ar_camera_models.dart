@@ -371,44 +371,32 @@ class CaptureTask {
     );
   }
 
-  /// Get predefined capture tasks for crop insurance
+  /// Get predefined capture tasks for crop insurance - simple farmer-friendly tasks
   static List<CaptureTask> getStandardTasks() {
     return [
       const CaptureTask(
-        id: 'top_view',
-        type: CaptureTaskType.topView,
-        title: 'Top View',
-        description: 'Hold phone directly above the crop',
-        requiredMinPitch: -90,
-        requiredMaxPitch: -60,
-        requiredMinRoll: -15,
-        requiredMaxRoll: 15,
-      ),
-      const CaptureTask(
-        id: 'side_view',
+        id: 'full_plant',
         type: CaptureTaskType.sideView,
-        title: 'Side View',
-        description: 'Hold phone at eye level, facing the crop',
-        requiredMinPitch: -15,
-        requiredMaxPitch: 15,
-        requiredMinRoll: -15,
-        requiredMaxRoll: 15,
+        title: 'Full Plant Photo',
+        description: 'Stand 2-3 feet away and take a photo of the whole plant',
       ),
       const CaptureTask(
-        id: 'close_up',
+        id: 'leaf_photo',
         type: CaptureTaskType.closeUp,
-        title: 'Close-Up',
-        description: 'Capture leaf/stem details',
-        requiredMinDistance: 0.1,
-        requiredMaxDistance: 0.3,
+        title: 'Leaf Close-up',
+        description: 'Move close to a leaf and take its photo clearly',
       ),
       const CaptureTask(
-        id: 'wide_angle',
+        id: 'field_view',
         type: CaptureTaskType.wideAngle,
-        title: 'Wide Angle',
-        description: 'Capture full field view',
-        requiredMinDistance: 2.0,
-        requiredMaxDistance: 10.0,
+        title: 'Field View',
+        description: 'Step back and capture your entire crop field',
+      ),
+      const CaptureTask(
+        id: 'damage_photo',
+        type: CaptureTaskType.closeUp,
+        title: 'Damage/Problem Area',
+        description: 'If any damage, take a clear photo of the affected area',
       ),
     ];
   }
