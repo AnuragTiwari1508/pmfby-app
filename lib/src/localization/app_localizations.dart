@@ -2482,6 +2482,99 @@ class AppStrings {
       'en': 'Zoom',
       'hi': 'ज़ूम',
     },
+    // AR Camera strings
+    'warning_blurry': {
+      'en': 'Image appears blurry - hold steady',
+      'hi': 'छवि धुंधली दिख रही है - स्थिर रखें',
+    },
+    'warning_overexposed': {
+      'en': 'Too bright - move to shade',
+      'hi': 'बहुत उज्ज्वल - छाया में जाएं',
+    },
+    'warning_underexposed': {
+      'en': 'Too dark - better lighting needed',
+      'hi': 'बहुत अंधेरा - बेहतर रोशनी चाहिए',
+    },
+    'warning_backlight': {
+      'en': 'Backlight detected - reposition camera',
+      'hi': 'बैकलाइट मिली - कैमरा रिपोजिशन करें',
+    },
+    'task': {
+      'en': 'Task',
+      'hi': 'कार्य',
+    },
+    'quality': {
+      'en': 'Quality',
+      'hi': 'गुणवत्ता',
+    },
+    'cannot_capture': {
+      'en': 'Cannot capture - fix issues first',
+      'hi': 'कैप्चर नहीं हो सकता - पहले समस्याएं ठीक करें',
+    },
+    'exit_confirmation_title': {
+      'en': 'Exit Camera?',
+      'hi': 'कैमरा से बाहर निकलें?',
+    },
+    'exit_confirmation_message': {
+      'en': 'You have {count} captured image(s). Exit will discard them.',
+      'hi': 'आपके पास {count} कैप्चर की गई छवि(यां) हैं। बाहर निकलने से वे हट जाएंगी।',
+    },
+    'top_view': {
+      'en': 'Top View',
+      'hi': 'ऊपर से दृश्य',
+    },
+    'side_view': {
+      'en': 'Side View',
+      'hi': 'साइड व्यू',
+    },
+    'close_up': {
+      'en': 'Close-up',
+      'hi': 'क्लोज़-अप',
+    },
+    'wide_angle': {
+      'en': 'Wide Angle',
+      'hi': 'वाइड एंगल',
+    },
+    'hold_steady': {
+      'en': 'Hold steady',
+      'hi': 'स्थिर रखें',
+    },
+    'move_closer': {
+      'en': 'Move closer',
+      'hi': 'करीब आएं',
+    },
+    'move_back': {
+      'en': 'Move back',
+      'hi': 'पीछे जाएं',
+    },
+    'good_position': {
+      'en': 'Good position',
+      'hi': 'अच्छी स्थिति',
+    },
+    'gps_acquiring': {
+      'en': 'Acquiring GPS...',
+      'hi': 'GPS प्राप्त हो रहा है...',
+    },
+    'gps_verified': {
+      'en': 'Location verified',
+      'hi': 'स्थान सत्यापित',
+    },
+    'gps_outside': {
+      'en': 'Outside farm boundary',
+      'hi': 'खेत की सीमा के बाहर',
+    },
+    'capture_complete': {
+      'en': 'Capture Complete',
+      'hi': 'कैप्चर पूर्ण',
+    },
+    'all_tasks_done': {
+      'en': 'All tasks completed successfully',
+      'hi': 'सभी कार्य सफलतापूर्वक पूर्ण',
+    },
+    'review_images': {
+      'en': 'Review Images',
+      'hi': 'छवियों की समीक्षा करें',
+    },
   };
 
   // Crop Loss
