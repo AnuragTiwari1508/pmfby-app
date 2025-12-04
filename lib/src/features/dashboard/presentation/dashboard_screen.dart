@@ -16,6 +16,7 @@ import '../../satellite/enhanced_satellite_screen.dart';
 import '../../settings/language_settings_screen.dart';
 import '../../../providers/language_provider.dart';
 import '../../../localization/app_localizations.dart';
+import 'dart:ui';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -30,10 +31,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool _isLoading = true;
   int _pendingUploadsCount = 0;
   final LocalStorageService _localStorageService = LocalStorageService();
+  final ScrollController _scrollController = ScrollController();
+  double _scrollOffset = 0.0;
 
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(() {
+      setState(() {
+        _scrollOffset = _scrollController.offset;
+      });
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadUserProfile();
       _loadPendingUploads();
@@ -49,6 +57,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   void dispose() {
+    _scrollController.dispose();
     final autoSyncService = context.read<AutoSyncService>();
     autoSyncService.stopPeriodicSync();
     super.dispose();
@@ -226,10 +235,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildHomeScreen() {
+    // Calculate blur intensity based on scroll (0 to 10)
+    double blurIntensity = (_scrollOffset / 50).clamp(0.0, 10.0);
+    // Calculate opacity for fade effect
+    double opacity = (1.0 - (_scrollOffset / 100)).clamp(0.0, 1.0);
+    
     return Container(
       color: const Color(0xFFFAFAFA),
       child: SafeArea(
         child: CustomScrollView(
+          controller: _scrollController,
           slivers: [
             // App Bar
             SliverAppBar(
@@ -349,45 +364,59 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.2),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: const Icon(
-                                    Icons.verified_user,
-                                    color: Colors.white,
-                                    size: 28,
-                                  ),
+                            // Apply blur and fade effect to welcome section
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: BackdropFilter(
+                                filter: ImageFilter.blur(
+                                  sigmaX: blurIntensity,
+                                  sigmaY: blurIntensity,
                                 ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                child: AnimatedOpacity(
+                                  opacity: opacity,
+                                  duration: const Duration(milliseconds: 50),
+                                  child: Row(
                                     children: [
-                                      Text(
-                                        AppStrings.get('greetings', 'welcome', context.read<LanguageProvider>().currentLanguage),
-                                        style: GoogleFonts.notoSansDevanagari(
-                                          fontSize: 16,
-                                          color: Colors.white.withOpacity(0.9),
-                                          fontWeight: FontWeight.w400,
+                                      Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withOpacity(0.2),
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: const Icon(
+                                          Icons.verified_user,
+                                          color: Colors.white,
+                                          size: 28,
                                         ),
                                       ),
-                                      Text(
-                                        _userProfile?.name ?? "किसान भाई",
-                                        style: GoogleFonts.notoSans(
-                                          fontSize: 20,
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              AppStrings.get('greetings', 'welcome', context.read<LanguageProvider>().currentLanguage),
+                                              style: GoogleFonts.notoSansDevanagari(
+                                                fontSize: 16,
+                                                color: Colors.white.withOpacity(0.9),
+                                                fontWeight: FontWeight.w400,
+                                              ),
+                                            ),
+                                            Text(
+                                              _userProfile?.name ?? "किसान भाई",
+                                              style: GoogleFonts.notoSans(
+                                                fontSize: 20,
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
                                     ],
                                   ),
                                 ),
-                              ],
+                              ),
                             ),
                           ],
                         ),

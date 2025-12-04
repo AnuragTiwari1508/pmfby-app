@@ -11,6 +11,7 @@ import '../../providers/language_provider.dart';
 import '../../localization/app_localizations.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+import '../../services/weather_service.dart';
 
 enum OfficerLevel {
   national,
@@ -35,6 +36,11 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
   // From master branch → keep for location services
   String? _currentLocation;
   bool _isLoadingLocation = true;
+  
+  // Weather data
+  Map<String, dynamic>? _weatherData;
+  bool _isLoadingWeather = true;
+  final WeatherService _weatherService = WeatherService();
 
   // From other branch → keep filter option
   String _selectedClaimFilter = 'all'; // all, pending, approved, rejected
@@ -118,6 +124,27 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
   void initState() {
     super.initState();
     _getCurrentLocation();
+    _fetchWeatherData();
+  }
+  
+  Future<void> _fetchWeatherData() async {
+    setState(() => _isLoadingWeather = true);
+    
+    try {
+      final weatherData = await _weatherService.getWeatherForCurrentLocation();
+      
+      if (mounted) {
+        setState(() {
+          _weatherData = weatherData;
+          _isLoadingWeather = false;
+        });
+      }
+    } catch (e) {
+      print('Error fetching weather: $e');
+      if (mounted) {
+        setState(() => _isLoadingWeather = false);
+      }
+    }
   }
 
   Future<void> _getCurrentLocation() async {
@@ -996,6 +1023,63 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
   }
 
   Widget _buildWeatherPlaceholder(String lang) {
+    if (_isLoadingWeather) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.blue.shade400, Colors.blue.shade600],
+          ),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Center(
+          child: CircularProgressIndicator(
+            color: Colors.white,
+          ),
+        ),
+      );
+    }
+
+    if (_weatherData == null) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.blue.shade400, Colors.blue.shade600],
+          ),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.cloud_off, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  AppStrings.get('officer', 'weather_api', lang),
+                  style: GoogleFonts.poppins(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Unable to load weather data',
+              style: GoogleFonts.roboto(
+                color: Colors.white.withOpacity(0.9),
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Display actual weather data
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1003,42 +1087,120 @@ class _OfficerDashboardScreenState extends State<OfficerDashboardScreen> {
           colors: [Colors.blue.shade400, Colors.blue.shade600],
         ),
         borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.blue.withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(Icons.cloud, color: Colors.white, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                AppStrings.get('officer', 'weather_api', lang),
-                style: GoogleFonts.poppins(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                ),
+              Row(
+                children: [
+                  Icon(Icons.location_on, color: Colors.white, size: 16),
+                  const SizedBox(width: 4),
+                  Text(
+                    _weatherData!['location'] ?? 'Unknown',
+                    style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+              IconButton(
+                icon: Icon(Icons.refresh, color: Colors.white, size: 20),
+                onPressed: _fetchWeatherData,
+                padding: EdgeInsets.zero,
+                constraints: BoxConstraints(),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          Text(
-            AppStrings.get('officer', 'integration_pending', lang),
-            style: GoogleFonts.roboto(
-              color: Colors.white.withOpacity(0.9),
-              fontSize: 12,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            AppStrings.get('officer', 'realtime_weather_data', lang),
-            style: GoogleFonts.roboto(
-              color: Colors.white.withOpacity(0.7),
-              fontSize: 10,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${_weatherData!['temp']}°',
+                        style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontSize: 36,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(
+                          WeatherService.getWeatherIconLocal(_weatherData!['main']),
+                          style: TextStyle(fontSize: 32),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Text(
+                    _weatherData!['description'].toString().toUpperCase(),
+                    style: GoogleFonts.roboto(
+                      color: Colors.white.withOpacity(0.9),
+                      fontSize: 12,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ],
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  _buildWeatherDetail(
+                    Icons.water_drop,
+                    '${_weatherData!['humidity']}%',
+                  ),
+                  const SizedBox(height: 4),
+                  _buildWeatherDetail(
+                    Icons.air,
+                    '${_weatherData!['wind_speed']} km/h',
+                  ),
+                  const SizedBox(height: 4),
+                  _buildWeatherDetail(
+                    Icons.thermostat,
+                    '${_weatherData!['feels_like']}°C',
+                  ),
+                ],
+              ),
+            ],
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildWeatherDetail(IconData icon, String value) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, color: Colors.white.withOpacity(0.8), size: 16),
+        const SizedBox(width: 4),
+        Text(
+          value,
+          style: GoogleFonts.roboto(
+            color: Colors.white.withOpacity(0.9),
+            fontSize: 11,
+          ),
+        ),
+      ],
     );
   }
 
