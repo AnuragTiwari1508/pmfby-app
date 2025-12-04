@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -154,7 +155,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             if (didPop) return;
             final shouldExit = await _showExitConfirmationDialog();
             if (shouldExit && mounted) {
-              Navigator.of(context).pop();
+              SystemNavigator.pop();
             }
           },
           child: Scaffold(
